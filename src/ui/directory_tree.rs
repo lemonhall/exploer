@@ -1,5 +1,5 @@
 use druid::widget::{Flex, Label, Scroll, Container, Painter, SizedBox, CrossAxisAlignment};
-use druid::{Widget, WidgetExt, RenderContext, Rect, Point};
+use druid::{Widget, WidgetExt, RenderContext, Rect, Point, Size, Color};
 use druid_widget_nursery::Tree;
 use crate::models::{AppState, FileItem};
 use crate::{SELECT_DIRECTORY, LOAD_SUBDIRECTORIES};
@@ -68,7 +68,7 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                     }
                 })
                 .fix_size(16.0, 16.0)
-                .padding((2.0, 0.0))
+                .padding((5.0, 0.0))
                 // 点击展开/折叠图标时加载子目录
                 .on_click(|ctx, data: &mut FileItem, _| {
                     println!("点击展开/折叠图标: {}, 当前展开状态: {}", data.name, data.is_expanded);
@@ -103,7 +103,7 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                 Label::dynamic(|item: &FileItem, _| item.name.clone())
                 .with_text_color(SELECTED_TEXT) // 统一使用亮色文本，与深色背景形成对比
                 .with_text_size(14.0) // 明确设置字体大小
-                .padding((4.0, 0.0)) // 调整左右内边距
+                .padding((8.0, 0.0)) // 从4.0增加到8.0，增加文本与周围元素的间距
                 // 点击目录名时选择目录并更新右侧面板
                 .on_click(|ctx, data: &mut FileItem, _| {
                     // 处理我的电脑节点
@@ -143,7 +143,7 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                 })
             )
             .expand_width()
-            .fix_height(24.0)
+            .fix_height(36.0) // 从32.0增加到36.0，增加每一行的高度
         },
         FileItem::is_expanded,
     )
@@ -151,8 +151,9 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
 
     // 使用Container包装Tree控件，添加内边距和背景色
     let tree_with_padding = Container::new(tree)
-        .padding((10.0, 10.0, 10.0, 20.0))
-        .background(DARK_BACKGROUND); // 使用深色背景
+        .padding(10.0) // 保持外边距
+        .background(Color::rgb8(40, 44, 52))
+        .expand_height();
 
     // 使用Scroll包装带边距的树形控件，使其可滚动
     Scroll::new(tree_with_padding)
