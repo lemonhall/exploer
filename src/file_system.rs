@@ -19,10 +19,13 @@ pub fn get_drives() -> Vec<FileItem> {
             
             // 检查该盘符是否存在
             if path.exists() {
+                // 预先加载每个驱动器的子目录
+                let children = build_file_tree(&path, 1);
+                
                 drives.push(FileItem {
                     name: drive.clone(),
-                    children: Vec::new(), // 初始为空，稍后按需加载
-                    is_expanded: false,
+                    children, // 直接加载子目录，不再是空的
+                    is_expanded: true, // 默认展开
                     path,
                     is_selected: false,
                 });
@@ -32,12 +35,15 @@ pub fn get_drives() -> Vec<FileItem> {
     
     #[cfg(not(target_os = "windows"))]
     {
-        // 在非Windows系统上，只添加根目录
+        // 在非Windows系统上，只添加根目录，并预加载子目录
+        let root_path = PathBuf::from("/");
+        let children = build_file_tree(&root_path, 1);
+        
         drives.push(FileItem {
             name: "/".to_string(),
-            children: Vec::new(),
-            is_expanded: false,
-            path: PathBuf::from("/"),
+            children,
+            is_expanded: true,
+            path: root_path,
             is_selected: false,
         });
     }

@@ -26,7 +26,7 @@ impl<W: Widget<FileDetail>> Controller<FileDetail, W> for FileItemController {
                 // 双击时打开文件并设置等待光标
                 ctx.submit_command(Command::new(
                     OPEN_FILE,
-                    data.full_path.clone().to_string_lossy().to_string(),
+                    data.full_path.clone(),
                     Target::Auto
                 ));
                 

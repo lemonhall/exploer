@@ -23,17 +23,35 @@ pub struct FileItem {
 impl TreeNode for FileItem {
     /// 返回子项数量
     fn children_count(&self) -> usize {
-        self.children.len()
+        // 如果是我的电脑或驱动器，总是返回子项数量
+        if self.name == "我的电脑" || self.name.ends_with(":\\") {
+            println!("强制显示 {} 的子项: {}", self.name, self.children.len());
+            return self.children.len();
+        }
+        
+        // 对其他项目，正常处理展开/折叠
+        if self.is_expanded {
+            self.children.len()
+        } else {
+            0
+        }
     }
     
     /// 获取指定索引的子项
     fn get_child(&self, index: usize) -> &Self {
-        &self.children[index]
+        let child = &self.children[index];
+        if self.name == "我的电脑" {
+            println!("获取我的电脑子项: {} (索引{}), 展开状态: {}", child.name, index, child.is_expanded);
+        }
+        child
     }
     
     /// 允许修改子项
     fn for_child_mut(&mut self, index: usize, mut cb: impl FnMut(&mut Self, usize)) {
         let child = &mut self.children[index];
+        if self.name == "我的电脑" {
+            println!("修改我的电脑子项: {} (索引{}), 展开状态: {}", child.name, index, child.is_expanded);
+        }
         cb(child, index);
     }
 }

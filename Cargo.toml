@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 windows = "0.54"
-windows-sys = "0.48"
+windows-sys = { version = "0.48", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }
 winit = "0.29"
 druid = "0.8.3"
 im = "15.1"

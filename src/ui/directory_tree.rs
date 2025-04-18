@@ -20,6 +20,11 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
             // 添加展开/折叠图标和文件夹图标
             row.add_child(
                 Painter::new(|ctx, item: &FileItem, _env| {
+                    if item.name == "我的电脑" {
+                        println!("绘制我的电脑图标, 展开状态: {}, 子项数: {}", 
+                                item.is_expanded, item.children.len());
+                    }
+                    
                     // 绘制简单的文件夹图标
                     let rect = ctx.size().to_rect();
                     let icon_size = rect.size();
@@ -66,12 +71,28 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                 .padding((2.0, 0.0))
                 // 点击展开/折叠图标时加载子目录
                 .on_click(|ctx, data: &mut FileItem, _| {
+                    println!("点击展开/折叠图标: {}, 当前展开状态: {}", data.name, data.is_expanded);
                     let path = data.path.clone();
+                    
+                    // 处理我的电脑节点，强制始终展开
+                    if data.name == "我的电脑" {
+                        // 我的电脑节点始终保持展开状态
+                        data.is_expanded = true;
+                        println!("我的电脑点击 - 始终保持展开状态");
+                        // 如果子目录为空，加载驱动器
+                        if data.children.is_empty() {
+                            println!("发送加载我的电脑子目录命令");
+                            ctx.submit_command(LOAD_SUBDIRECTORIES.with(path.clone()));
+                        }
+                        return;
+                    }
+                    
                     // 先切换展开状态
                     data.is_expanded = !data.is_expanded;
                     
                     // 如果是展开且没有子目录，则请求加载子目录
                     if data.is_expanded && data.children.is_empty() {
+                        println!("发送加载子目录命令: {}", path.display());
                         ctx.submit_command(LOAD_SUBDIRECTORIES.with(path.clone()));
                     }
                 })
@@ -85,6 +106,13 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                 .padding((4.0, 0.0)) // 调整左右内边距
                 // 点击目录名时选择目录并更新右侧面板
                 .on_click(|ctx, data: &mut FileItem, _| {
+                    // 处理我的电脑节点
+                    if data.name == "我的电脑" {
+                        // 确保我的电脑节点始终处于展开状态
+                        data.is_expanded = true;
+                        println!("点击我的电脑标签 - 保持展开状态");
+                    }
+                    
                     // 获取当前点击的目录路径
                     let path = data.path.clone();
                     

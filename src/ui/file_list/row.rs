@@ -20,6 +20,12 @@ pub fn file_list_item() -> impl Widget<FileDetail> {
                     .controller(DirectoryItemController);
                 
                 Box::new(dir_row)
+            } else if file_type == "驱动器" {
+                // 为驱动器创建特殊行
+                let drive_row = create_file_row(FOLDER_COLOR, FOLDER_COLOR, true)
+                    .controller(DirectoryItemController);
+                
+                Box::new(drive_row)
             } else if file_type.ends_with(" 文件") {
                 // 提取文件扩展名并设置相应颜色
                 let ext = file_type.split_whitespace().next().unwrap_or("");

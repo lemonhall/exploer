@@ -39,7 +39,7 @@ fn build_file_list_header() -> impl Widget<AppState> {
         .padding(10.0)
         .align_left();
         
-    let modified_header = Label::new("修改时间")
+    let modified_header = Label::new("修改时间/信息")
         .with_text_color(SELECTED_TEXT)
         .with_text_size(14.0)
         .padding(10.0)
