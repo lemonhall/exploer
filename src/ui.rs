@@ -1,4 +1,4 @@
-use druid::widget::{Flex, Label, ScrollBox};
+use druid::widget::{Flex, Label, Scroll, Container};
 use druid::{Widget, WidgetExt};
 use druid_widget_nursery::Tree;
 use crate::models::{AppState, FileItem};
@@ -33,8 +33,12 @@ pub fn build_ui() -> impl Widget<AppState> {
     // 将树形控件连接到应用程序状态的root属性
     .lens(AppState::root);
 
-    // 使用ScrollBox包装Tree控件，使其可滚动
-    ScrollBox::new(tree)
+    // 使用Container包装Tree控件，添加内边距
+    let tree_with_padding = Container::new(tree)
+        .padding((10.0, 10.0, 10.0, 20.0)); // 左、上、右、下边距，底部边距更大
+
+    // 使用Scroll包装带边距的树形控件，使其可滚动
+    Scroll::new(tree_with_padding)
         .vertical() // 允许垂直滚动
         .expand() // 扩展填充可用空间
 } 
