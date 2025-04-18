@@ -4,7 +4,6 @@ mod icons;
 mod item_styles;
 
 pub use row::file_list_item;
-pub use controllers::DirectoryItemController;
 
 use druid::widget::{Flex, Label, Scroll, List};
 use druid::{Widget, WidgetExt};

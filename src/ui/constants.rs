@@ -95,5 +95,6 @@ pub const EXECUTABLE_FILE_COLOR: Color = Color::rgb8(80, 220, 100);
 pub const REGULAR_FILE_COLOR: Color = Color::rgb8(200, 200, 200);
 
 /// 粗体字体
+#[allow(dead_code)]
 pub const FONT_BOLD: FontDescriptor = FontDescriptor::new(FontFamily::SYSTEM_UI)
     .with_weight(FontWeight::BOLD); 
