@@ -1,0 +1,12 @@
+[package]
+name = "file_explorer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+windows = "0.54"
+windows-sys = "0.48"
+winit = "0.29"
+druid = "0.8"
+im = "15.1"
+druid-widget-nursery = "0.1.0"

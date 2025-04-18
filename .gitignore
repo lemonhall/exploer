@@ -1,0 +1,34 @@
+# 忽略编译生成的文件和目录
+target/
+
+# 忽略Rust工具生成的文件
+**/*.rs.bk
+*.pdb
+*.d
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 忽略日志文件
+*.log
+
+# 忽略IDE和编辑器配置
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 忽略Cargo的锁文件（根据项目性质可选）
+# Cargo.lock
+
+# Rust特定的文件
+.rustc_info.json
+.rustdoc_fingerprint.json
+CACHEDIR.TAG
+
+# 忽略生成的文档
+/doc/
+
+# 本地配置文件
+.env 
