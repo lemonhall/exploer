@@ -2,7 +2,7 @@ use druid::widget::{Flex, Label, Scroll, Container, Painter, SizedBox, CrossAxis
 use druid::{Widget, WidgetExt, RenderContext, Rect, Point};
 use druid_widget_nursery::Tree;
 use crate::models::{AppState, FileItem};
-use crate::SELECT_DIRECTORY;
+use crate::{SELECT_DIRECTORY, LOAD_SUBDIRECTORIES};
 use super::constants::*;
 
 /// 构建目录树视图（左侧面板）
@@ -64,6 +64,17 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                 })
                 .fix_size(16.0, 16.0)
                 .padding((2.0, 0.0))
+                // 点击展开/折叠图标时加载子目录
+                .on_click(|ctx, data: &mut FileItem, _| {
+                    let path = data.path.clone();
+                    // 先切换展开状态
+                    data.is_expanded = !data.is_expanded;
+                    
+                    // 如果是展开且没有子目录，则请求加载子目录
+                    if data.is_expanded && data.children.is_empty() {
+                        ctx.submit_command(LOAD_SUBDIRECTORIES.with(path.clone()));
+                    }
+                })
             );
             
             // 添加目录名标签
@@ -72,11 +83,22 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                 .with_text_color(SELECTED_TEXT) // 统一使用亮色文本，与深色背景形成对比
                 .with_text_size(14.0) // 明确设置字体大小
                 .padding((4.0, 0.0)) // 调整左右内边距
-                // 点击目录时更新当前选中的目录路径
+                // 点击目录名时选择目录并更新右侧面板
                 .on_click(|ctx, data: &mut FileItem, _| {
                     // 获取当前点击的目录路径
                     let path = data.path.clone();
-                    // 直接发送自定义命令
+                    
+                    // 如果是折叠状态，则展开并加载子目录
+                    if !data.is_expanded {
+                        data.is_expanded = true;
+                        
+                        // 如果没有子目录，则请求加载
+                        if data.children.is_empty() {
+                            ctx.submit_command(LOAD_SUBDIRECTORIES.with(path.clone()));
+                        }
+                    }
+                    
+                    // 发送选择目录命令，更新右侧面板
                     ctx.submit_command(SELECT_DIRECTORY.with(path));
                 })
             );

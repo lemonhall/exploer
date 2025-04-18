@@ -13,6 +13,8 @@ use std::path::PathBuf;
 
 // 自定义命令：选择目录
 pub const SELECT_DIRECTORY: Selector<PathBuf> = Selector::new("file-explorer.select-directory");
+// 自定义命令：加载子目录
+pub const LOAD_SUBDIRECTORIES: Selector<PathBuf> = Selector::new("file-explorer.load-subdirectories");
 
 /// 自定义AppDelegate实现，处理目录选择命令
 struct FileExplorerDelegate;
@@ -40,6 +42,10 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
             update_selection(&mut data.root, &path);
             
             return Handled::Yes;
+        } else if let Some(path) = cmd.get(LOAD_SUBDIRECTORIES) {
+            // 动态加载子目录
+            load_subdirectories(&mut data.root, path);
+            return Handled::Yes;
         }
         Handled::No
     }
@@ -65,6 +71,21 @@ fn update_selection(item: &mut FileItem, selected_path: &PathBuf) {
     }
 }
 
+/// 动态加载子目录
+fn load_subdirectories(item: &mut FileItem, target_path: &PathBuf) {
+    if item.path == *target_path {
+        // 找到目标路径，加载子目录
+        if item.children.is_empty() {
+            item.children = build_file_tree(&item.path, 1);
+        }
+        return;
+    }
+    
+    for child in &mut item.children {
+        load_subdirectories(child, target_path);
+    }
+}
+
 /// 程序入口函数
 fn main() {
     // 创建主窗口描述
@@ -78,8 +99,8 @@ fn main() {
     // 创建根文件项
     let mut root = FileItem {
         name: "Root".to_string(),
-        // 获取目录树，最多递归3层
-        children: build_file_tree(&current_dir, 3),
+        // 获取目录树，初始只加载2层，后续按需加载
+        children: build_file_tree(&current_dir, 2),
         is_expanded: true,  // 默认展开根节点
         path: current_dir.clone(),
         is_selected: false,
