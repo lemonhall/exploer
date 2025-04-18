@@ -17,7 +17,7 @@ pub fn build_ui() -> impl Widget<AppState> {
         build_directory_tree(),
         build_file_list()
     )
-    .split_point(0.3)  // 左侧面板占30%的宽度
+    .split_point(0.25)  // 左侧面板占25%的宽度，减少以给右侧更多空间
     .draggable(true)   // 允许调整分割位置
     .solid_bar(true);  // 使用实心分隔条
 

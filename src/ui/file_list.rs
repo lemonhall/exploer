@@ -28,56 +28,58 @@ pub fn build_file_list() -> impl Widget<AppState> {
                 .fix_size(16.0, 16.0)
                 .padding((5.0, 5.0))
             )
-            // 添加文件名
+            // 添加文件名 - 限制宽度，防止挤压其他列
             .with_child(
                 Label::dynamic(|item: &FileDetail, _| item.name.clone())
                 .with_text_color(DARK_TEXT)
-                .expand_width()
                 .padding(5.0)
+                .fix_width(180.0)
             )
             // 添加文件大小
             .with_child(
                 Label::dynamic(|item: &FileDetail, _| {
                     if item.file_type == "目录" {
-                        "".to_string()
+                        "-".to_string() // 使用短横线代替空字符串，更加明显
                     } else {
                         format_file_size(item.size)
                     }
                 })
                 .with_text_color(DARK_TEXT)
                 .padding(5.0)
-                .fix_width(100.0)
+                .fix_width(80.0) // 减小宽度
             )
             // 添加文件类型
             .with_child(
                 Label::dynamic(|item: &FileDetail, _| item.file_type.clone())
                 .with_text_color(DARK_TEXT)
                 .padding(5.0)
-                .fix_width(100.0)
+                .fix_width(80.0) // 减小宽度
             )
             // 添加修改时间
             .with_child(
                 Label::dynamic(|item: &FileDetail, _| item.modified.clone())
                 .with_text_color(DARK_TEXT)
                 .padding(5.0)
-                .fix_width(150.0)
+                .fix_width(100.0) // 减小宽度
             )
+            .must_fill_main_axis(true) // 确保行填充整个可用宽度
     })
     .lens(AppState::current_dir_files);
 
     // 给列表添加标题行
     let header_row = Flex::row()
         .with_child(Label::new("").fix_size(26.0, 20.0))
-        .with_child(Label::new("名称").with_text_color(DARK_TEXT).expand_width().padding(5.0))
-        .with_child(Label::new("大小").with_text_color(DARK_TEXT).padding(5.0).fix_width(100.0))
-        .with_child(Label::new("类型").with_text_color(DARK_TEXT).padding(5.0).fix_width(100.0))
-        .with_child(Label::new("修改日期").with_text_color(DARK_TEXT).padding(5.0).fix_width(150.0))
+        .with_child(Label::new("名称").with_text_color(DARK_TEXT).padding(5.0).fix_width(180.0))
+        .with_child(Label::new("大小").with_text_color(DARK_TEXT).padding(5.0).fix_width(80.0))
+        .with_child(Label::new("类型").with_text_color(DARK_TEXT).padding(5.0).fix_width(80.0))
+        .with_child(Label::new("修改日期").with_text_color(DARK_TEXT).padding(5.0).fix_width(100.0))
+        .must_fill_main_axis(true) // 确保标题行填充整个可用宽度
         .background(HEADER_BACKGROUND);
     
     // 组合标题行和文件列表
     let file_view = Flex::column()
         .with_child(header_row)
-        .with_flex_child(Scroll::new(file_list), 1.0);  // 直接在列表上应用滚动
+        .with_flex_child(Scroll::new(file_list).horizontal(), 1.0); // 添加水平滚动支持
 
     // 添加内边距并返回
     Container::new(file_view)
