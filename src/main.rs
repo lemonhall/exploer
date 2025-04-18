@@ -4,13 +4,15 @@ mod file_system;
 mod ui;
 mod assets;
 mod commands;
+mod system;
 
 // 导入所需的类型和函数
 use druid::{AppLauncher, WindowDesc, Selector, AppDelegate, Env, Command, Target, DelegateCtx, Handled};
 use models::{AppState, FileItem};
 use file_system::{build_file_tree, get_directory_contents, get_drives};
 use ui::build_ui;
-use commands::NAVIGATE_TO;
+use commands::{NAVIGATE_TO, OPEN_FILE};
+use system::open_file;
 use std::path::PathBuf;
 
 // 自定义命令：选择目录
@@ -61,6 +63,12 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
             // 设置当前选中的目录项
             update_selection(&mut data.root, &path);
             
+            return Handled::Yes;
+        } else if let Some(path) = cmd.get(OPEN_FILE) {
+            // 使用系统默认程序打开文件
+            if let Err(err) = open_file(path) {
+                eprintln!("打开文件失败: {}", err);
+            }
             return Handled::Yes;
         }
         Handled::No

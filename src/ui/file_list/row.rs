@@ -1,10 +1,48 @@
 use druid::{
-    widget::{Flex, Label, ViewSwitcher, Painter},
-    Widget, WidgetExt, Color, RenderContext, Point, Rect, kurbo::BezPath
+    widget::{Flex, Label, ViewSwitcher, Painter, Controller},
+    Widget, WidgetExt, Color, RenderContext, Point, Rect, kurbo::BezPath,
+    Event, Command, Target
 };
 use crate::models::FileDetail;
 use crate::ui::constants::*;
+use crate::commands::{NAVIGATE_TO, OPEN_FILE};
 use super::controllers::DirectoryItemController;
+
+/// 文件项控制器，处理双击打开文件
+struct FileItemController;
+
+impl<W: Widget<FileDetail>> Controller<FileDetail, W> for FileItemController {
+    fn event(&mut self, child: &mut W, ctx: &mut druid::EventCtx, event: &Event, data: &mut FileDetail, env: &druid::Env) {
+        match event {
+            Event::MouseDown(mouse) if mouse.button.is_left() && mouse.count >= 2 => {
+                // 双击时打开文件
+                ctx.submit_command(Command::new(
+                    OPEN_FILE,
+                    data.full_path.clone(),
+                    Target::Auto
+                ));
+                ctx.set_handled();
+            }
+            Event::MouseMove(_) => {
+                // 鼠标移动时设置悬停效果
+                if ctx.is_hot() {
+                    ctx.set_cursor(&druid::Cursor::Pointer);
+                    ctx.request_paint();
+                }
+            }
+            _ => {}
+        }
+        child.event(ctx, event, data, env);
+    }
+
+    fn update(&mut self, child: &mut W, ctx: &mut druid::UpdateCtx, old_data: &FileDetail, data: &FileDetail, env: &druid::Env) {
+        child.update(ctx, old_data, data, env);
+    }
+
+    fn lifecycle(&mut self, child: &mut W, ctx: &mut druid::LifeCycleCtx, event: &druid::LifeCycle, data: &FileDetail, env: &druid::Env) {
+        child.lifecycle(ctx, event, data, env);
+    }
+}
 
 /// 创建一个文件列表行，根据给定的颜色
 fn create_file_row(color: Color, icon_color: Color, is_dir: bool) -> impl Widget<FileDetail> {
@@ -129,29 +167,33 @@ pub fn file_list_item() -> impl Widget<FileDetail> {
             } else if file_type.ends_with(" 文件") {
                 // 提取文件扩展名并设置相应颜色
                 let ext = file_type.split_whitespace().next().unwrap_or("");
-                match ext {
+                let row = match ext {
                     "txt" | "md" | "json" | "xml" | "html" | "css" | "js" | "py" | "rs" | "c" | "cpp" | "h" | "hpp" | "java" | "go" | "php" | "rb" => {
-                        Box::new(create_file_row(TEXT_FILE_COLOR, TEXT_FILE_COLOR, false))
+                        create_file_row(TEXT_FILE_COLOR, TEXT_FILE_COLOR, false)
                     }
                     "jpg" | "jpeg" | "png" | "gif" | "bmp" | "svg" | "ico" => {
-                        Box::new(create_file_row(IMAGE_FILE_COLOR, IMAGE_FILE_COLOR, false))
+                        create_file_row(IMAGE_FILE_COLOR, IMAGE_FILE_COLOR, false)
                     }
                     "mp3" | "wav" | "flac" | "ogg" | "aac" => {
-                        Box::new(create_file_row(AUDIO_FILE_COLOR, AUDIO_FILE_COLOR, false))
+                        create_file_row(AUDIO_FILE_COLOR, AUDIO_FILE_COLOR, false)
                     }
                     "mp4" | "avi" | "mkv" | "mov" | "wmv" => {
-                        Box::new(create_file_row(VIDEO_FILE_COLOR, VIDEO_FILE_COLOR, false))
+                        create_file_row(VIDEO_FILE_COLOR, VIDEO_FILE_COLOR, false)
                     }
                     "zip" | "rar" | "7z" | "tar" | "gz" => {
-                        Box::new(create_file_row(ARCHIVE_FILE_COLOR, ARCHIVE_FILE_COLOR, false))
+                        create_file_row(ARCHIVE_FILE_COLOR, ARCHIVE_FILE_COLOR, false)
                     }
                     "exe" | "dll" | "so" | "dylib" => {
-                        Box::new(create_file_row(EXECUTABLE_FILE_COLOR, EXECUTABLE_FILE_COLOR, false))
+                        create_file_row(EXECUTABLE_FILE_COLOR, EXECUTABLE_FILE_COLOR, false)
                     }
-                    _ => Box::new(create_file_row(REGULAR_FILE_COLOR, REGULAR_FILE_COLOR, false)),
-                }
+                    _ => create_file_row(REGULAR_FILE_COLOR, REGULAR_FILE_COLOR, false),
+                };
+                
+                // 为所有文件添加双击打开功能
+                Box::new(row.controller(FileItemController))
             } else {
-                Box::new(create_file_row(REGULAR_FILE_COLOR, REGULAR_FILE_COLOR, false))
+                Box::new(create_file_row(REGULAR_FILE_COLOR, REGULAR_FILE_COLOR, false)
+                    .controller(FileItemController))
             }
         },
     )
