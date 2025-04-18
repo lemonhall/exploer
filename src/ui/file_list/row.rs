@@ -5,7 +5,7 @@ use druid::{
 };
 use crate::models::FileDetail;
 use crate::ui::constants::*;
-use crate::commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR};
+use crate::commands::{OPEN_FILE, RESET_CURSOR};
 use std::time::Duration;
 use super::controllers::DirectoryItemController;
 

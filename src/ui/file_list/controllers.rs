@@ -1,6 +1,6 @@
 use druid::{
     widget::Controller, 
-    Widget, Event, Command, Target, Cursor, TimerToken
+    Widget, Event, Command, Target, Cursor
 };
 use crate::models::FileDetail;
 use crate::commands::{NAVIGATE_TO, RESET_CURSOR};

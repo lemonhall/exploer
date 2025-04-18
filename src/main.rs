@@ -12,7 +12,6 @@ use models::{AppState, FileItem};
 use file_system::{build_file_tree, get_directory_contents, get_drives};
 use ui::build_ui;
 use commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR};
-use system::open_file;
 use std::path::PathBuf;
 
 // 自定义命令：选择目录
@@ -71,14 +70,6 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
         } else {
             Handled::No
         }
-    }
-}
-
-/// 清除所有项的选中状态
-fn clear_selection(item: &mut FileItem) {
-    item.is_selected = false;
-    for child in &mut item.children {
-        clear_selection(child);
     }
 }
 

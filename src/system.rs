@@ -54,6 +54,7 @@ pub fn open_file<P: AsRef<Path>>(path: P) -> Result<(), String> {
 }
 
 /// 在文件夹中显示文件（即打开包含该文件的文件夹并选中该文件）
+#[allow(dead_code)]
 pub fn show_in_folder<P: AsRef<Path>>(path: P) -> Result<(), String> {
     let path = path.as_ref();
     
