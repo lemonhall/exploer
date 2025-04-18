@@ -116,8 +116,8 @@ pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries {
             if let Ok(entry) = entry {
-                let path = entry.path();
-                let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                let entry_path = entry.path();
+                let name = entry_path.file_name().unwrap_or_default().to_string_lossy().to_string();
                 
                 // 跳过隐藏文件和目录
                 if name.starts_with(".") {
@@ -125,24 +125,24 @@ pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
                 }
                 
                 // 获取文件大小
-                let size = if path.is_file() {
-                    std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0)
+                let size = if entry_path.is_file() {
+                    std::fs::metadata(&entry_path).map(|m| m.len()).unwrap_or(0)
                 } else {
                     0 // 目录大小显示为0
                 };
                 
                 // 获取文件类型
-                let file_type = if path.is_dir() {
+                let file_type = if entry_path.is_dir() {
                     "目录".to_string()
                 } else {
-                    match path.extension() {
+                    match entry_path.extension() {
                         Some(ext) => format!("{} 文件", ext.to_string_lossy()),
                         None => "文件".to_string()
                     }
                 };
                 
                 // 获取修改时间
-                let modified = std::fs::metadata(&path)
+                let modified = std::fs::metadata(&entry_path)
                     .and_then(|m| m.modified())
                     .map(|time| {
                         // 使用更友好的时间格式显示
@@ -167,11 +167,15 @@ pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
                     })
                     .unwrap_or_else(|_| "未知".to_string());
                 
+                // 保存完整路径以便导航
+                let full_path = entry_path.clone();
+                
                 result.push(FileDetail {
                     name,
                     size,
                     file_type,
                     modified,
+                    full_path,
                 });
             }
         }

@@ -1,7 +1,13 @@
 use druid::Color;
+use druid::FontDescriptor;
+use druid::FontFamily;
+use druid::FontWeight;
 
 /// 当前选中项的背景颜色（适当加深的蓝色，提高对比度）
 pub const SELECTED_COLOR: Color = Color::rgb8(65, 105, 225);
+
+/// 悬停项的背景颜色（轻微高亮）
+pub const HOVER_COLOR: Color = Color::rgb8(50, 50, 60);
 
 /// 深色主题背景色
 pub const DARK_BACKGROUND: Color = Color::rgb8(32, 32, 32);
@@ -50,4 +56,32 @@ pub const IMAGE_FILE_COLOR: Color = Color::rgb8(120, 195, 85);
 pub const EXE_FILE_COLOR: Color = Color::rgb8(80, 220, 100);
 
 /// ICO文件图标颜色
-pub const ICO_FILE_COLOR: Color = Color::rgb8(255, 165, 0); 
+pub const ICO_FILE_COLOR: Color = Color::rgb8(255, 165, 0);
+
+/// 中等深度背景色（用于表头等）
+pub const MID_BACKGROUND: Color = Color::rgb8(45, 45, 45);
+
+/// 浅色背景（用于文件列表区域）
+pub const LIGHT_BACKGROUND: Color = Color::rgb8(38, 38, 38);
+
+/// 文本文件颜色
+pub const TEXT_FILE_COLOR: Color = Color::rgb8(108, 165, 209);
+
+/// 音频文件颜色
+pub const AUDIO_FILE_COLOR: Color = Color::rgb8(180, 120, 200);
+
+/// 视频文件颜色
+pub const VIDEO_FILE_COLOR: Color = Color::rgb8(230, 126, 34);
+
+/// 存档文件颜色
+pub const ARCHIVE_FILE_COLOR: Color = Color::rgb8(150, 150, 150);
+
+/// 可执行文件颜色
+pub const EXECUTABLE_FILE_COLOR: Color = Color::rgb8(80, 220, 100);
+
+/// 常规文件颜色
+pub const REGULAR_FILE_COLOR: Color = Color::rgb8(200, 200, 200);
+
+/// 粗体字体
+pub const FONT_BOLD: FontDescriptor = FontDescriptor::new(FontFamily::SYSTEM_UI)
+    .with_weight(FontWeight::BOLD); 

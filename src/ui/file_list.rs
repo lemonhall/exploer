@@ -1,157 +1,186 @@
-use druid::widget::{Flex, Label, Scroll, Container, List, Painter};
-use druid::{Widget, WidgetExt, RenderContext, Color};
+use druid::{
+    widget::{Flex, Label, List, Scroll, ViewSwitcher, Controller},
+    Command, Widget, WidgetExt, Color, Target, Event, RenderContext
+};
 use crate::models::{AppState, FileDetail};
-use super::constants::*;
-use super::utils::format_file_size;
+use crate::ui::constants::*;
+use crate::commands::NAVIGATE_TO;
 
-/// 构建文件列表视图（右侧面板）
+/// 构建文件列表视图
 pub fn build_file_list() -> impl Widget<AppState> {
-    // 使用固定宽度，但增加文件名列的宽度
-    const ICON_WIDTH: f64 = 30.0;
-    const NAME_WIDTH: f64 = 350.0;  // 文件名宽度增加
-    const SIZE_WIDTH: f64 = 80.0;
-    const TYPE_WIDTH: f64 = 100.0;
-    const DATE_WIDTH: f64 = 150.0;
-    
-    // 创建文件列表
-    let file_list = List::new(|| {
-        // 为每个文件或目录项创建一行
-        Flex::row()
-            // 添加图标（目录或文件）
-            .with_child(
-                Painter::new(|ctx, data: &FileDetail, _env| {
-                    // 获取绘制区域
-                    let rect = ctx.size().to_rect();
-                    let is_dir = data.file_type == "目录";
-                    
-                    if is_dir {
-                        // 绘制目录图标（黄色文件夹）
-                        // 文件夹主体
-                        let folder = druid::kurbo::BezPath::from_vec(vec![
-                            druid::kurbo::PathEl::MoveTo(druid::kurbo::Point::new(rect.x0 + 2.0, rect.y0 + 4.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 2.0, rect.y0 + 4.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 2.0, rect.y1 - 2.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x0 + 2.0, rect.y1 - 2.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x0 + 2.0, rect.y0 + 4.0)),
-                        ]);
-                        ctx.fill(&folder, &FOLDER_COLOR);
-                        
-                        // 文件夹顶部
-                        let folder_top = druid::kurbo::BezPath::from_vec(vec![
-                            druid::kurbo::PathEl::MoveTo(druid::kurbo::Point::new(rect.x0 + 2.0, rect.y0 + 3.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x0 + 6.0, rect.y0 + 3.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x0 + 8.0, rect.y0 + 5.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 2.0, rect.y0 + 5.0)),
-                        ]);
-                        ctx.fill(&folder_top, &Color::rgb8(255, 180, 80));
-                        
-                        // 边框
-                        ctx.stroke(&folder, &Color::rgb8(200, 170, 80), 0.5);
-                    } else {
-                        // 为不同类型的文件提供不同的图标
-                        let file_color = match data.file_type.as_str() {
-                            "rs 文件" => RUST_FILE_COLOR,
-                            "html 文件" => HTML_FILE_COLOR,
-                            "js 文件" => JS_FILE_COLOR,
-                            "css 文件" => CSS_FILE_COLOR,
-                            "toml 文件" => TOML_FILE_COLOR,
-                            "md 文件" => MD_FILE_COLOR,
-                            "svg 文件" | "png 文件" | "jpg 文件" | "jpeg 文件" | "gif 文件" => IMAGE_FILE_COLOR,
-                            "exe 文件" => EXE_FILE_COLOR,
-                            "ico 文件" => ICO_FILE_COLOR,
-                            _ => FILE_COLOR,
-                        };
-                        
-                        // 绘制基础文件图标形状（纸张形状）
-                        let file_shape = druid::kurbo::BezPath::from_vec(vec![
-                            druid::kurbo::PathEl::MoveTo(druid::kurbo::Point::new(rect.x0 + 2.0, rect.y0 + 2.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 5.0, rect.y0 + 2.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 2.0, rect.y0 + 5.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 2.0, rect.y1 - 2.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x0 + 2.0, rect.y1 - 2.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x0 + 2.0, rect.y0 + 2.0)),
-                        ]);
-                        ctx.fill(&file_shape, &file_color);
-                        
-                        // 添加右上角折页效果
-                        let fold = druid::kurbo::BezPath::from_vec(vec![
-                            druid::kurbo::PathEl::MoveTo(druid::kurbo::Point::new(rect.x1 - 5.0, rect.y0 + 2.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 5.0, rect.y0 + 5.0)),
-                            druid::kurbo::PathEl::LineTo(druid::kurbo::Point::new(rect.x1 - 2.0, rect.y0 + 5.0)),
-                        ]);
-                        ctx.fill(&fold, &Color::rgb8(220, 220, 220));
-                        
-                        // 文件图标边框
-                        ctx.stroke(&file_shape, &Color::rgb8(150, 150, 150), 0.5);
-                    }
-                })
-                .fix_size(16.0, 16.0)
-                .center()
-                .fix_width(ICON_WIDTH)
-            )
-            // 添加文件名
-            .with_child(
-                Label::dynamic(|item: &FileDetail, _| item.name.clone())
-                .with_text_color(DARK_TEXT)
-                .padding(5.0)
-                .fix_width(NAME_WIDTH)
-            )
-            // 添加文件大小
-            .with_child(
-                Label::dynamic(|item: &FileDetail, _| {
-                    if item.file_type == "目录" {
-                        "-".to_string()
-                    } else {
-                        format_file_size(item.size)
-                    }
-                })
-                .with_text_color(DARK_TEXT)
-                .padding(5.0)
-                .fix_width(SIZE_WIDTH)
-            )
-            // 添加文件类型
-            .with_child(
-                Label::dynamic(|item: &FileDetail, _| item.file_type.clone())
-                .with_text_color(DARK_TEXT)
-                .padding(5.0)
-                .fix_width(TYPE_WIDTH)
-            )
-            // 添加修改时间
-            .with_child(
-                Label::dynamic(|item: &FileDetail, _| item.modified.clone())
-                .with_text_color(DARK_TEXT)
-                .padding(5.0)
-                .fix_width(DATE_WIDTH)
-            )
-    })
-    .lens(AppState::current_dir_files);
+    let header = build_file_list_header();
+    let content = build_file_list_content();
 
-    // 计算内容区域总宽度
-    let content_width = ICON_WIDTH + NAME_WIDTH + SIZE_WIDTH + TYPE_WIDTH + DATE_WIDTH;
-    
-    // 给列表添加标题行
-    let header_row = Flex::row()
-        .with_child(Label::new("").fix_width(ICON_WIDTH))
-        .with_child(Label::new("名称").with_text_color(DARK_TEXT).padding(5.0).fix_width(NAME_WIDTH))
-        .with_child(Label::new("大小").with_text_color(DARK_TEXT).padding(5.0).fix_width(SIZE_WIDTH))
-        .with_child(Label::new("类型").with_text_color(DARK_TEXT).padding(5.0).fix_width(TYPE_WIDTH))
-        .with_child(Label::new("修改日期").with_text_color(DARK_TEXT).padding(5.0).fix_width(DATE_WIDTH))
-        .background(HEADER_BACKGROUND);
-    
-    // 组合标题行和文件列表
-    let file_view = Flex::column()
-        .with_child(header_row)
-        .with_flex_child(
-            // 同时支持水平和垂直滚动
-            Scroll::new(file_list)
-                .horizontal()
-                .vertical(), 
-            1.0
-        );
+    Flex::column()
+        .with_child(header)
+        .with_flex_child(content, 1.0)
+        .background(LIGHT_BACKGROUND)
+}
 
-    // 添加内边距并返回
-    Container::new(file_view)
+/// 构建文件列表头部（列名）
+fn build_file_list_header() -> impl Widget<AppState> {
+    let name_label = Label::new("名称")
+        .with_text_size(14.0)
+        .with_font(FONT_BOLD)
+        .align_left();
+
+    let size_label = Label::new("大小")
+        .with_text_size(14.0)
+        .with_font(FONT_BOLD)
+        .align_left();
+
+    let type_label = Label::new("类型")
+        .with_text_size(14.0)
+        .with_font(FONT_BOLD)
+        .align_left();
+
+    let modified_label = Label::new("修改时间")
+        .with_text_size(14.0)
+        .with_font(FONT_BOLD)
+        .align_left();
+
+    Flex::row()
+        .with_flex_child(name_label, 0.4)
+        .with_flex_child(size_label, 0.2)
+        .with_flex_child(type_label, 0.2)
+        .with_flex_child(modified_label, 0.2)
         .padding(10.0)
-        .background(DARK_BACKGROUND)
-        .expand()
+        .background(MID_BACKGROUND)
+}
+
+/// 构建文件列表内容
+fn build_file_list_content() -> impl Widget<AppState> {
+    // 使用lens从AppState提取当前目录内容
+    let file_list = List::new(|| file_list_item())
+        .lens(AppState::current_dir_files);
+
+    // 使用Scroll包装文件列表，允许水平和垂直滚动
+    Scroll::new(file_list)
+        .horizontal()
+        .vertical()
+}
+
+/// 目录项控制器，处理悬停和点击事件
+struct DirectoryItemController;
+
+impl<W: Widget<FileDetail>> Controller<FileDetail, W> for DirectoryItemController {
+    fn event(&mut self, child: &mut W, ctx: &mut druid::EventCtx, event: &Event, data: &mut FileDetail, env: &druid::Env) {
+        match event {
+            Event::MouseDown(mouse) if mouse.button.is_left() => {
+                // 导航到该目录
+                ctx.submit_command(Command::new(
+                    NAVIGATE_TO,
+                    data.full_path.clone(),
+                    Target::Auto
+                ));
+                ctx.set_handled();
+            }
+            Event::MouseMove(_) => {
+                // 鼠标移动时设置悬停效果
+                if ctx.is_hot() {
+                    ctx.set_cursor(&druid::Cursor::Pointer);
+                    ctx.request_paint();
+                }
+            }
+            _ => {}
+        }
+        child.event(ctx, event, data, env);
+    }
+
+    fn update(&mut self, child: &mut W, ctx: &mut druid::UpdateCtx, old_data: &FileDetail, data: &FileDetail, env: &druid::Env) {
+        child.update(ctx, old_data, data, env);
+    }
+
+    fn lifecycle(&mut self, child: &mut W, ctx: &mut druid::LifeCycleCtx, event: &druid::LifeCycle, data: &FileDetail, env: &druid::Env) {
+        child.lifecycle(ctx, event, data, env);
+    }
+}
+
+/// 创建一个文件列表行，根据给定的颜色
+fn create_file_row(color: Color) -> impl Widget<FileDetail> {
+    // 名称列
+    let name_label = Label::dynamic(|data: &FileDetail, _| data.name.clone())
+        .with_text_size(14.0)
+        .with_text_color(color)
+        .align_left();
+
+    // 大小列 - 格式化显示
+    let size_label = Label::dynamic(|data: &FileDetail, _| {
+        if data.file_type == "目录" {
+            "".to_string()
+        } else if data.size < 1024 {
+            format!("{} B", data.size)
+        } else if data.size < 1024 * 1024 {
+            format!("{:.1} KB", data.size as f64 / 1024.0)
+        } else if data.size < 1024 * 1024 * 1024 {
+            format!("{:.1} MB", data.size as f64 / (1024.0 * 1024.0))
+        } else {
+            format!("{:.1} GB", data.size as f64 / (1024.0 * 1024.0 * 1024.0))
+        }
+    })
+    .with_text_size(14.0)
+    .with_text_color(color)
+    .align_left();
+
+    // 类型列
+    let type_label = Label::dynamic(|data: &FileDetail, _| data.file_type.clone())
+        .with_text_size(14.0)
+        .with_text_color(color)
+        .align_left();
+
+    // 修改时间列
+    let modified_label = Label::dynamic(|data: &FileDetail, _| data.modified.clone())
+        .with_text_size(14.0)
+        .with_text_color(color)
+        .align_left();
+
+    Flex::row()
+        .with_flex_child(name_label, 0.4)
+        .with_flex_child(size_label, 0.2)
+        .with_flex_child(type_label, 0.2)
+        .with_flex_child(modified_label, 0.2)
+        .padding(10.0)
+}
+
+/// 构建文件列表中的单个文件项
+fn file_list_item() -> impl Widget<FileDetail> {
+    // 使用ViewSwitcher为不同类型的文件设置不同的颜色
+    ViewSwitcher::new(
+        |data: &FileDetail, _env| data.file_type.clone(),
+        |file_type, _data, _env| {
+            if file_type == "目录" {
+                // 为目录创建带有特殊交互的行
+                let dir_row = create_file_row(FOLDER_COLOR)
+                    .controller(DirectoryItemController);
+                
+                Box::new(dir_row)
+            } else if file_type.ends_with(" 文件") {
+                // 提取文件扩展名并设置相应颜色
+                let ext = file_type.split_whitespace().next().unwrap_or("");
+                match ext {
+                    "txt" | "md" | "json" | "xml" | "html" | "css" | "js" | "py" | "rs" | "c" | "cpp" | "h" | "hpp" | "java" | "go" | "php" | "rb" => {
+                        Box::new(create_file_row(TEXT_FILE_COLOR))
+                    }
+                    "jpg" | "jpeg" | "png" | "gif" | "bmp" | "svg" | "ico" => {
+                        Box::new(create_file_row(IMAGE_FILE_COLOR))
+                    }
+                    "mp3" | "wav" | "flac" | "ogg" | "aac" => {
+                        Box::new(create_file_row(AUDIO_FILE_COLOR))
+                    }
+                    "mp4" | "avi" | "mkv" | "mov" | "wmv" => {
+                        Box::new(create_file_row(VIDEO_FILE_COLOR))
+                    }
+                    "zip" | "rar" | "7z" | "tar" | "gz" => {
+                        Box::new(create_file_row(ARCHIVE_FILE_COLOR))
+                    }
+                    "exe" | "dll" | "so" | "dylib" => {
+                        Box::new(create_file_row(EXECUTABLE_FILE_COLOR))
+                    }
+                    _ => Box::new(create_file_row(REGULAR_FILE_COLOR)),
+                }
+            } else {
+                Box::new(create_file_row(REGULAR_FILE_COLOR))
+            }
+        },
+    )
 } 

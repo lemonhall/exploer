@@ -3,12 +3,14 @@ mod models;
 mod file_system;
 mod ui;
 mod assets;
+mod commands;
 
 // 导入所需的类型和函数
 use druid::{AppLauncher, WindowDesc, Selector, AppDelegate, Env, Command, Target, DelegateCtx, Handled};
 use models::{AppState, FileItem};
 use file_system::{build_file_tree, get_directory_contents, get_drives};
 use ui::build_ui;
+use commands::NAVIGATE_TO;
 use std::path::PathBuf;
 
 // 自定义命令：选择目录
@@ -45,6 +47,20 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
         } else if let Some(path) = cmd.get(LOAD_SUBDIRECTORIES) {
             // 动态加载子目录
             load_subdirectories(&mut data.root, path);
+            return Handled::Yes;
+        } else if let Some(path) = cmd.get(NAVIGATE_TO) {
+            // 清除之前的选中状态
+            clear_selection(&mut data.root);
+            
+            // 更新选中的目录路径
+            data.selected_path = Some(path.clone());
+            
+            // 更新右侧面板的文件列表
+            data.current_dir_files = get_directory_contents(&path);
+            
+            // 设置当前选中的目录项
+            update_selection(&mut data.root, &path);
+            
             return Handled::Yes;
         }
         Handled::No

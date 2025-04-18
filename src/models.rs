@@ -50,6 +50,9 @@ pub struct FileDetail {
     /// 修改时间
     #[data(same_fn = "PartialEq::eq")]
     pub modified: String,
+    /// 文件的完整路径
+    #[data(same_fn = "PartialEq::eq")]
+    pub full_path: PathBuf,
 }
 
 /// 应用程序状态结构体
