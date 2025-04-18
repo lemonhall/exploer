@@ -11,7 +11,7 @@ use druid::{AppLauncher, WindowDesc, Selector, AppDelegate, Env, Command, Target
 use models::{AppState, FileItem};
 use file_system::{build_file_tree, get_directory_contents, get_drives};
 use ui::build_ui;
-use commands::{NAVIGATE_TO, OPEN_FILE};
+use commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR};
 use system::open_file;
 use std::path::PathBuf;
 
@@ -32,46 +32,45 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
         data: &mut AppState,
         _env: &Env,
     ) -> Handled {
-        if let Some(path) = cmd.get(SELECT_DIRECTORY) {
-            // 清除之前的选中状态
-            clear_selection(&mut data.root);
+        if let Some(dir_path) = cmd.get(NAVIGATE_TO) {
+            // 处理导航命令
+            let dir_path = PathBuf::from(dir_path);
+            let contents = file_system::get_directory_contents(&dir_path);
+            data.current_dir_files = contents;
             
-            // 更新选中的目录路径
-            data.selected_path = Some(path.clone());
+            // 更新选中路径
+            data.selected_path = Some(dir_path.clone());
             
-            // 更新右侧面板的文件列表
-            data.current_dir_files = get_directory_contents(&path);
+            // 更新树的选中状态
+            update_selection(&mut data.root, &dir_path);
             
-            // 设置当前选中的目录项
-            update_selection(&mut data.root, &path);
-            
-            return Handled::Yes;
-        } else if let Some(path) = cmd.get(LOAD_SUBDIRECTORIES) {
-            // 动态加载子目录
-            load_subdirectories(&mut data.root, path);
-            return Handled::Yes;
-        } else if let Some(path) = cmd.get(NAVIGATE_TO) {
-            // 清除之前的选中状态
-            clear_selection(&mut data.root);
-            
-            // 更新选中的目录路径
-            data.selected_path = Some(path.clone());
-            
-            // 更新右侧面板的文件列表
-            data.current_dir_files = get_directory_contents(&path);
-            
-            // 设置当前选中的目录项
-            update_selection(&mut data.root, &path);
-            
-            return Handled::Yes;
-        } else if let Some(path) = cmd.get(OPEN_FILE) {
-            // 使用系统默认程序打开文件
-            if let Err(err) = open_file(path) {
-                eprintln!("打开文件失败: {}", err);
+            Handled::Yes
+        } else if let Some(file_path) = cmd.get(OPEN_FILE) {
+            // 处理打开文件命令
+            match system::open_file(file_path) {
+                Ok(_) => {},
+                Err(e) => eprintln!("打开文件失败: {}", e),
             }
-            return Handled::Yes;
+            Handled::Yes
+        } else if let Some(path) = cmd.get(SELECT_DIRECTORY) {
+            // 处理选择目录命令
+            data.selected_path = Some(path.clone());
+            data.current_dir_files = file_system::get_directory_contents(path);
+            
+            // 更新树的选中状态
+            update_selection(&mut data.root, path);
+            
+            Handled::Yes
+        } else if let Some(path) = cmd.get(LOAD_SUBDIRECTORIES) {
+            // 处理加载子目录命令
+            load_subdirectories(&mut data.root, path);
+            Handled::Yes
+        } else if let Some(()) = cmd.get(RESET_CURSOR) {
+            // 处理重置光标命令
+            Handled::Yes
+        } else {
+            Handled::No
         }
-        Handled::No
     }
 }
 
@@ -85,11 +84,15 @@ fn clear_selection(item: &mut FileItem) {
 
 /// 更新选中状态
 fn update_selection(item: &mut FileItem, selected_path: &PathBuf) {
+    // 先清除当前项的选中状态
+    item.is_selected = false;
+    
+    // 如果当前项就是要选中的路径，则设置为选中
     if item.path == *selected_path {
         item.is_selected = true;
-        return;
     }
     
+    // 递归处理所有子项
     for child in &mut item.children {
         update_selection(child, selected_path);
     }

@@ -1,33 +1,69 @@
 use druid::{
     widget::{Flex, Label, ViewSwitcher, Painter, Controller},
     Widget, WidgetExt, Color, RenderContext, Point, Rect, kurbo::BezPath,
-    Event, Command, Target
+    Event, Command, Target, TimerToken, Cursor
 };
 use crate::models::FileDetail;
 use crate::ui::constants::*;
-use crate::commands::{NAVIGATE_TO, OPEN_FILE};
+use crate::commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR};
+use std::time::Duration;
 use super::controllers::DirectoryItemController;
 
 /// 文件项控制器，处理双击打开文件
-struct FileItemController;
+struct FileItemController {
+    cursor_timer: Option<TimerToken>,
+}
+
+impl FileItemController {
+    fn new() -> Self {
+        Self {
+            cursor_timer: None,
+        }
+    }
+}
 
 impl<W: Widget<FileDetail>> Controller<FileDetail, W> for FileItemController {
     fn event(&mut self, child: &mut W, ctx: &mut druid::EventCtx, event: &Event, data: &mut FileDetail, env: &druid::Env) {
         match event {
             Event::MouseDown(mouse) if mouse.button.is_left() && mouse.count >= 2 => {
-                // 双击时打开文件
+                // 双击时打开文件并设置等待光标
                 ctx.submit_command(Command::new(
                     OPEN_FILE,
-                    data.full_path.clone(),
+                    data.full_path.clone().to_string_lossy().to_string(),
                     Target::Auto
                 ));
+                
+                // 设置等待光标
+                ctx.set_cursor(&Cursor::Crosshair);
+                
+                // 创建定时器，2秒后重置光标
+                let timer_token = ctx.request_timer(Duration::from_secs(2));
+                self.cursor_timer = Some(timer_token);
+                
                 ctx.set_handled();
             }
+            Event::Timer(token) => {
+                if Some(*token) == self.cursor_timer {
+                    // 定时器触发，重置光标
+                    ctx.set_cursor(&Cursor::Arrow);
+                    self.cursor_timer = None;
+                    ctx.request_update();
+                    ctx.set_handled();
+                }
+            }
             Event::MouseMove(_) => {
-                // 鼠标移动时设置悬停效果
-                if ctx.is_hot() {
-                    ctx.set_cursor(&druid::Cursor::Pointer);
+                // 鼠标移动时设置悬停效果，但只在没有等待定时器时
+                if ctx.is_hot() && self.cursor_timer.is_none() {
+                    ctx.set_cursor(&Cursor::Pointer);
                     ctx.request_paint();
+                }
+            }
+            Event::Command(cmd) => {
+                if let Some(()) = cmd.get(RESET_CURSOR) {
+                    // 收到重置光标命令
+                    ctx.set_cursor(&Cursor::Arrow);
+                    self.cursor_timer = None;
+                    ctx.set_handled();
                 }
             }
             _ => {}
@@ -190,10 +226,10 @@ pub fn file_list_item() -> impl Widget<FileDetail> {
                 };
                 
                 // 为所有文件添加双击打开功能
-                Box::new(row.controller(FileItemController))
+                Box::new(row.controller(FileItemController::new()))
             } else {
                 Box::new(create_file_row(REGULAR_FILE_COLOR, REGULAR_FILE_COLOR, false)
-                    .controller(FileItemController))
+                    .controller(FileItemController::new()))
             }
         },
     )
