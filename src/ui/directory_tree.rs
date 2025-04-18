@@ -69,7 +69,7 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
             // 添加目录名标签
             row.add_child(
                 Label::dynamic(|item: &FileItem, _| item.name.clone())
-                .with_text_color(DARK_TEXT)
+                .with_text_color(SELECTED_TEXT) // 统一使用亮色文本，与深色背景形成对比
                 .with_text_size(14.0) // 明确设置字体大小
                 .padding((4.0, 0.0)) // 调整左右内边距
                 // 点击目录时更新当前选中的目录路径
@@ -87,6 +87,7 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
                     let rect = ctx.size().to_rect();
                     
                     if item.is_selected {
+                        // 使用选中背景色
                         ctx.fill(rect, &SELECTED_COLOR);
                     }
                 })
