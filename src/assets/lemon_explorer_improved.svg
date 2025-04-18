@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 深色背景 -->
+  <rect width="512" height="512" rx="80" fill="#1A202C"/>
+  
+  <!-- 柠檬图案背景 -->
+  <g opacity="0.1">
+    <g transform="translate(50, 50) scale(0.5)">
+      <ellipse cx="45" cy="60" rx="45" ry="60" fill="#F6E05E"/>
+    </g>
+    <g transform="translate(400, 150) scale(0.4)">
+      <ellipse cx="45" cy="60" rx="45" ry="60" fill="#F6E05E"/>
+    </g>
+    <g transform="translate(100, 380) scale(0.35)">
+      <ellipse cx="45" cy="60" rx="45" ry="60" fill="#F6E05E"/>
+    </g>
+    <g transform="translate(350, 420) scale(0.3)">
+      <ellipse cx="45" cy="60" rx="45" ry="60" fill="#F6E05E"/>
+    </g>
+  </g>
+  
+  <!-- 主文件夹 - 改为蓝色系 -->
+  <path d="M132 156C132 147.163 139.163 140 148 140H246L286 180H364C372.837 180 380 187.163 380 196V356C380 364.837 372.837 372 364 372H148C139.163 372 132 364.837 132 356V156Z" fill="#4299E1"/>
+  
+  <!-- 文件夹顶部 - 改为更深的蓝色 -->
+  <path d="M148 140H214L234 120H298L318 140H364C372.837 140 380 147.163 380 156V180H132V156C132 147.163 139.163 140 148 140Z" fill="#3182CE"/>
+  
+  <!-- 文件夹阴影 - 改为更深的蓝色 -->
+  <path d="M132 340V356C132 364.837 139.163 372 148 372H364C372.837 372 380 364.837 380 356V340H132Z" fill="#2B6CB0"/>
+  
+  <!-- 文件夹外边框 - 添加明显的轮廓 -->
+  <path d="M132 156C132 147.163 139.163 140 148 140H246L286 180H364C372.837 180 380 187.163 380 196V356C380 364.837 372.837 372 364 372H148C139.163 372 132 364.837 132 356V156Z" stroke="#A0AEC0" stroke-width="2" fill="none"/>
+  
+  <!-- 大柠檬，在文件夹上方 - 增强颜色对比度 -->
+  <g transform="translate(256, 200) scale(1.2)">
+    <!-- 柠檬主体 - 更鲜亮的黄色 -->
+    <ellipse cx="0" cy="0" rx="45" ry="60" fill="#FFD700"/>
+    
+    <!-- 柠檬高光 -->
+    <ellipse cx="-10" cy="-20" rx="20" ry="30" fill="#FFFACD" fill-opacity="0.6"/>
+    
+    <!-- 柠檬顶部小柄 -->
+    <path d="M0 -60C0 -60 -5 -50 -5 -45C-5 -40 5 -40 5 -45C5 -50 0 -60 0 -60Z" fill="#68D391"/>
+    
+    <!-- 柠檬纹理线 -->
+    <path d="M-25 -30C-15 -10 15 10 25 30" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-15 -35C-5 -10 5 15 15 40" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
+    <path d="M20 -30C10 -10 -10 10 -20 30" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- 添加柠檬轮廓 -->
+    <ellipse cx="0" cy="0" rx="45" ry="60" stroke="#B7791F" stroke-width="2" fill="none"/>
+  </g>
+</svg> 

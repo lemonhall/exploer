@@ -581,6 +581,7 @@ dependencies = [
  "windows",
  "windows-sys 0.48.0",
  "winit",
+ "winres",
 ]
 
 [[package]]
@@ -1856,7 +1857,7 @@ dependencies = [
  "cfg-expr",
  "heck 0.5.0",
  "pkg-config",
- "toml",
+ "toml 0.8.20",
  "version-compare",
 ]
 
@@ -1947,6 +1948,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9117f5d4db391c1cf6927e7bea3db74b9a1c1add8f7eda9ffd5364f40f57b82f"
 dependencies = [
  "displaydoc",
+]
+
+[[package]]
+name = "toml"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f7f0dd8d50a853a531c426359045b1998f04219d88799810762cd4ad314234"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -2722,6 +2732,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63d3fcd9bba44b03821e7d699eeee959f3126dcc4aa8e4ae18ec617c2a5cea10"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "winres"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b68db261ef59e9e52806f688020631e987592bd83619edccda9c47d42cde4f6c"
+dependencies = [
+ "toml 0.5.11",
 ]
 
 [[package]]

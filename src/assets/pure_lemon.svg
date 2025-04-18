@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <circle cx="256" cy="256" r="256" fill="#2D3748"/>
+  
+  <!-- 大柠檬 -->
+  <g transform="translate(256, 256) scale(3.5) rotate(-15)">
+    <!-- 柠檬主体 - 黄色部分 -->
+    <ellipse cx="0" cy="0" rx="45" ry="60" fill="#F6E05E"/>
+    
+    <!-- 柠檬高光 -->
+    <ellipse cx="-10" cy="-20" rx="20" ry="30" fill="#FAF089" fill-opacity="0.6"/>
+    
+    <!-- 柠檬顶部小柄 -->
+    <path d="M0 -60C0 -60 -5 -50 -5 -45C-5 -40 5 -40 5 -45C5 -50 0 -60 0 -60Z" fill="#68D391"/>
+    
+    <!-- 柠檬纹理线 -->
+    <path d="M-25 -30C-15 -10 15 10 25 30" stroke="#ECC94B" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-15 -35C-5 -10 5 15 15 40" stroke="#ECC94B" stroke-width="2" stroke-linecap="round"/>
+    <path d="M20 -30C10 -10 -10 10 -20 30" stroke="#ECC94B" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- 小文件夹 - 右下角的图标 -->
+  <g transform="translate(340, 340) scale(0.6) rotate(15)">
+    <!-- 文件夹主体 -->
+    <path d="M-50 -50C-50 -53 -47 -56 -44 -56H0L10 -46H44C47 -46 50 -43 50 -40V50C50 53 47 56 44 56H-44C-47 56 -50 53 -50 50V-50Z" fill="#FFD166"/>
+    
+    <!-- 文件夹顶部 -->
+    <path d="M-44 -56H-10L0 -66H30L40 -56H44C47 -56 50 -53 50 -50V-46H-50V-50C-50 -53 -47 -56 -44 -56Z" fill="#FFBD36"/>
+  </g>
+
+  <!-- 文档线条 - 左上角小图标 -->
+  <g transform="translate(180, 180) scale(0.5)">
+    <rect x="-30" y="-40" width="60" height="80" rx="5" fill="white" opacity="0.9"/>
+    <path d="M-20 -20H20" stroke="#CBD5E0" stroke-width="3" stroke-linecap="round"/>
+    <path d="M-20 0H20" stroke="#CBD5E0" stroke-width="3" stroke-linecap="round"/>
+    <path d="M-20 20H10" stroke="#CBD5E0" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg> 

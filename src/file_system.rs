@@ -103,9 +103,25 @@ pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
                 let modified = std::fs::metadata(&path)
                     .and_then(|m| m.modified())
                     .map(|time| {
-                        // 将系统时间转换为简单格式
-                        // 实际应用中应该使用chrono等库格式化时间
-                        format!("{:?}", time.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs())
+                        // 使用更友好的时间格式显示
+                        let system_time = std::time::SystemTime::now();
+                        let duration = system_time.duration_since(time).unwrap_or_default();
+                        
+                        if duration.as_secs() < 60 {
+                            "刚刚".to_string()
+                        } else if duration.as_secs() < 3600 {
+                            format!("{} 分钟前", duration.as_secs() / 60)
+                        } else if duration.as_secs() < 86400 {
+                            format!("{} 小时前", duration.as_secs() / 3600)
+                        } else {
+                            // 简单格式化为 年-月-日
+                            let secs = time.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
+                            let days = secs / 86400;
+                            let years = 1970 + (days / 365);
+                            let months = (days % 365) / 30 + 1;
+                            let day = (days % 365) % 30 + 1;
+                            format!("{}-{:02}-{:02}", years, months, day)
+                        }
                     })
                     .unwrap_or_else(|_| "未知".to_string());
                 

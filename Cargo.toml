@@ -3,10 +3,15 @@ name = "file_explorer"
 version = "0.1.0"
 edition = "2021"
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [dependencies]
 windows = "0.54"
 windows-sys = "0.48"
 winit = "0.29"
-druid = "0.8"
+druid = "0.8.3"
 im = "15.1"
 druid-widget-nursery = "0.1.0"
+
+[build-dependencies]
+winres = "0.1"

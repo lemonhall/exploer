@@ -2,6 +2,7 @@
 mod models;
 mod file_system;
 mod ui;
+mod assets;
 
 // 导入所需的类型和函数
 use druid::{AppLauncher, WindowDesc, Selector, AppDelegate, Env, Command, Target, DelegateCtx, Handled};

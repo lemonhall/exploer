@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="64" fill="#1E293B"/>
+  
+  <!-- 文件夹主体 -->
+  <path d="M112 156C112 147.163 119.163 140 128 140H236L276 180H384C392.837 180 400 187.163 400 196V356C400 364.837 392.837 372 384 372H128C119.163 372 112 364.837 112 356V156Z" fill="#FFD166"/>
+  
+  <!-- 文件夹顶部 -->
+  <path d="M128 140H204L224 120H288L308 140H384C392.837 140 400 147.163 400 156V180H112V156C112 147.163 119.163 140 128 140Z" fill="#FFBD36"/>
+  
+  <!-- 文件图标 - 简化 -->
+  <rect x="192" y="210" width="128" height="120" rx="4" fill="#FFFFFF"/>
+  <rect x="212" y="240" width="88" height="8" rx="2" fill="#E0E0E0"/>
+  <rect x="212" y="260" width="88" height="8" rx="2" fill="#E0E0E0"/>
+  <rect x="212" y="280" width="60" height="8" rx="2" fill="#E0E0E0"/>
+</svg> 
