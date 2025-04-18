@@ -1,9 +1,10 @@
 use druid::{
     widget::Controller, 
-    Widget, Event, Command, Target
+    Widget, Event, Command, Target, Cursor, TimerToken
 };
 use crate::models::FileDetail;
-use crate::commands::NAVIGATE_TO;
+use crate::commands::{NAVIGATE_TO, RESET_CURSOR};
+use std::time::Duration;
 
 /// 目录项控制器，处理悬停和点击事件
 pub struct DirectoryItemController;
@@ -18,13 +19,33 @@ impl<W: Widget<FileDetail>> Controller<FileDetail, W> for DirectoryItemControlle
                     data.full_path.clone().to_string_lossy().to_string(),
                     Target::Auto
                 ));
+                
+                // 设置等待光标
+                ctx.set_cursor(&Cursor::NotAllowed);
+                
+                // 1秒后自动重置光标
+                ctx.request_timer(Duration::from_secs(1));
+                
+                ctx.set_handled();
+            }
+            Event::Timer(_) => {
+                // 定时器触发，重置光标
+                ctx.set_cursor(&Cursor::Arrow);
+                ctx.request_update();
                 ctx.set_handled();
             }
             Event::MouseMove(_) => {
                 // 鼠标移动时设置悬停效果
                 if ctx.is_hot() {
-                    ctx.set_cursor(&druid::Cursor::Pointer);
+                    ctx.set_cursor(&Cursor::Pointer);
                     ctx.request_paint();
+                }
+            }
+            Event::Command(cmd) => {
+                if let Some(()) = cmd.get(RESET_CURSOR) {
+                    // 收到重置光标命令
+                    ctx.set_cursor(&Cursor::Arrow);
+                    ctx.set_handled();
                 }
             }
             _ => {}

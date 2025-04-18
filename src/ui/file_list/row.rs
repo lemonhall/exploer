@@ -34,7 +34,7 @@ impl<W: Widget<FileDetail>> Controller<FileDetail, W> for FileItemController {
                 ));
                 
                 // 设置等待光标
-                ctx.set_cursor(&Cursor::Crosshair);
+                ctx.set_cursor(&Cursor::NotAllowed);
                 
                 // 创建定时器，2秒后重置光标
                 let timer_token = ctx.request_timer(Duration::from_secs(2));
