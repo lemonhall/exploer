@@ -13,6 +13,7 @@ use file_system::{build_file_tree, get_directory_contents, get_drives};
 use ui::build_ui;
 use commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR};
 use std::path::PathBuf;
+use dirs;
 
 // 自定义命令：选择目录
 pub const SELECT_DIRECTORY: Selector<PathBuf> = Selector::new("file-explorer.select-directory");
@@ -108,11 +109,17 @@ fn load_subdirectories(item: &mut FileItem, target_path: &PathBuf) {
 fn main() {
     // 创建主窗口描述
     let main_window = WindowDesc::new(build_ui())
-        .title("文件管理器")  // 设置窗口标题
+        .title("柠檬文件管理器")  // 更新窗口标题
         .window_size((1000.0, 600.0));  // 设置窗口大小，增大以适应双栏布局
 
     // 获取当前系统的驱动器列表
     let drives = get_drives();
+    
+    // 获取用户主目录路径
+    let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("C:\\Users"));
+    
+    // 获取桌面目录路径
+    let desktop_dir = dirs::desktop_dir().unwrap_or_else(|| home_dir.join("Desktop"));
     
     // 确定初始选中的驱动器和目录
     let default_drive = if !drives.is_empty() {
@@ -122,10 +129,37 @@ fn main() {
         std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
     };
     
+    // 创建主文件夹项
+    let home_item = FileItem {
+        name: "主文件夹".to_string(),
+        children: build_file_tree(&home_dir, 1),
+        is_expanded: false,
+        path: home_dir.clone(),
+        is_selected: false,
+    };
+    
+    // 创建桌面项
+    let desktop_item = FileItem {
+        name: "桌面".to_string(),
+        children: build_file_tree(&desktop_dir, 1),
+        is_expanded: false,
+        path: desktop_dir.clone(),
+        is_selected: false,
+    };
+    
+    // 创建我的电脑项（包含驱动器）
+    let computer_item = FileItem {
+        name: "我的电脑".to_string(),
+        children: drives,
+        is_expanded: true,
+        path: PathBuf::from(""),
+        is_selected: false,
+    };
+    
     // 创建根文件项
     let mut root = FileItem {
-        name: "我的电脑".to_string(),  // 使用"我的电脑"作为根节点名称
-        children: drives,  // 使用驱动器列表作为子项
+        name: "文件导航".to_string(),  // 根节点名称
+        children: vec![home_item, desktop_item, computer_item],  // 添加主文件夹、桌面和我的电脑作为子项
         is_expanded: true,  // 默认展开根节点
         path: PathBuf::from(""),  // 根节点路径为空
         is_selected: false,
