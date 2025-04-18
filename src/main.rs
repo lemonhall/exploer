@@ -1,91 +1,36 @@
-use druid::widget::{Flex, Label};
-use druid::{AppLauncher, Data, Lens, Widget, WidgetExt, WindowDesc};
-use druid_widget_nursery::{Tree, TreeNode};
+// 声明模块
+mod models;
+mod file_system;
+mod ui;
 
-#[derive(Clone, Data, Lens, Debug, PartialEq)]
-struct FileItem {
-    name: String,
-    is_expanded: bool,
-    #[data(same_fn = "PartialEq::eq")]
-    children: Vec<FileItem>,
-}
+// 导入所需的类型和函数
+use druid::{AppLauncher, WindowDesc};
+use models::{AppState, FileItem};
+use file_system::build_file_tree;
+use ui::build_ui;
 
-impl TreeNode for FileItem {
-    fn children_count(&self) -> usize {
-        self.children.len()
-    }
-    
-    fn get_child(&self, index: usize) -> &Self {
-        &self.children[index]
-    }
-    
-    fn for_child_mut(&mut self, index: usize, mut cb: impl FnMut(&mut Self, usize)) {
-        let child = &mut self.children[index];
-        cb(child, index);
-    }
-}
-
-#[derive(Clone, Data, Lens)]
-struct AppState {
-    root: FileItem,
-}
-
+/// 程序入口函数
 fn main() {
+    // 创建主窗口描述
     let main_window = WindowDesc::new(build_ui())
-        .title("文件管理器")
-        .window_size((800.0, 600.0));
+        .title("文件管理器")  // 设置窗口标题
+        .window_size((800.0, 600.0));  // 设置窗口大小
 
+    // 创建根文件项
     let root = FileItem {
         name: "Root".to_string(),
+        // 获取当前目录的文件树，最多递归3层
         children: build_file_tree(std::env::current_dir().unwrap().as_path(), 3),
-        is_expanded: true,
+        is_expanded: true,  // 默认展开根节点
     };
 
+    // 创建初始应用程序状态
     let initial_state = AppState {
-        root: root,
+        root,
     };
 
+    // 启动应用程序
     AppLauncher::with_window(main_window)
         .launch(initial_state)
-        .expect("Failed to launch application");
-}
-
-fn build_file_tree(path: &std::path::Path, depth: usize) -> Vec<FileItem> {
-    if depth == 0 {
-        return Vec::new();
-    }
-
-    let mut items = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
-                let children = if path.is_dir() {
-                    build_file_tree(&path, depth - 1)
-                } else {
-                    Vec::new()
-                };
-                items.push(FileItem { 
-                    name, 
-                    children,
-                    is_expanded: false 
-                });
-            }
-        }
-    }
-    items
-}
-
-fn build_ui() -> impl Widget<AppState> {
-    let tree = Tree::new(
-        || {
-            Flex::column()
-                .with_child(Label::dynamic(|item: &FileItem, _| item.name.clone()).padding(5.0))
-        },
-        FileItem::is_expanded,
-    )
-    .lens(AppState::root);
-
-    tree
+        .expect("启动应用程序失败");
 }
