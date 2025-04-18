@@ -1,5 +1,5 @@
 use druid::widget::{Flex, Label, Scroll, Container, List, Painter};
-use druid::{Widget, WidgetExt, RenderContext, Rect};
+use druid::{Widget, WidgetExt, RenderContext};
 use crate::models::{AppState, FileDetail};
 use super::constants::*;
 use super::utils::format_file_size;
