@@ -42,6 +42,7 @@ fn build_directory_tree() -> impl Widget<AppState> {
 
     // 使用Scroll包装带边距的树形控件，使其可滚动
     Scroll::new(tree_with_padding)
+        .content_must_fill(true)  // 限制滚动范围
         .vertical()
         .expand()
 }
@@ -115,15 +116,11 @@ fn build_file_list() -> impl Widget<AppState> {
     // 组合标题行和文件列表
     let file_view = Flex::column()
         .with_child(header_row)
-        .with_flex_child(file_list, 1.0);
+        .with_flex_child(Scroll::new(file_list), 1.0);  // 直接在列表上应用滚动
 
-    // 使用Container包装文件列表，添加内边距
-    let file_view_with_padding = Container::new(file_view)
-        .padding(10.0);
-
-    // 使用Scroll包装带边距的文件列表，使其可滚动
-    Scroll::new(file_view_with_padding)
-        .vertical()
+    // 添加内边距并返回
+    Container::new(file_view)
+        .padding(10.0)
         .expand()
 }
 
