@@ -141,7 +141,13 @@ pub fn build_file_list() -> impl Widget<AppState> {
     // 组合标题行和文件列表
     let file_view = Flex::column()
         .with_child(header_row)
-        .with_flex_child(Scroll::new(file_list).horizontal(), 1.0);  // 添加水平滚动
+        .with_flex_child(
+            // 同时支持水平和垂直滚动
+            Scroll::new(file_list)
+                .horizontal()
+                .vertical(), 
+            1.0
+        );
 
     // 添加内边距并返回
     Container::new(file_view)
