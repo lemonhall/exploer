@@ -1,5 +1,6 @@
-use druid::{Data, Lens};
+use druid::{Data, Lens, im::Vector};
 use druid_widget_nursery::TreeNode;
+use std::path::PathBuf;
 
 /// 文件项结构体，表示文件系统中的一个文件或目录
 #[derive(Clone, Data, Lens, Debug, PartialEq)]
@@ -11,6 +12,9 @@ pub struct FileItem {
     /// 子项列表（对于文件，此列表为空）
     #[data(same_fn = "PartialEq::eq")]
     pub children: Vec<FileItem>,
+    /// 文件路径
+    #[data(same_fn = "PartialEq::eq")]
+    pub path: PathBuf,
 }
 
 /// 实现TreeNode特性，使FileItem可以在Tree控件中使用
@@ -32,9 +36,28 @@ impl TreeNode for FileItem {
     }
 }
 
+/// 文件详情，用于在右侧面板显示
+#[derive(Clone, Data, Lens, Debug, PartialEq)]
+pub struct FileDetail {
+    /// 文件名
+    pub name: String,
+    /// 文件大小（对目录为0）
+    pub size: u64,
+    /// 文件类型（文件/目录）
+    pub file_type: String,
+    /// 修改时间
+    #[data(same_fn = "PartialEq::eq")]
+    pub modified: String,
+}
+
 /// 应用程序状态结构体
 #[derive(Clone, Data, Lens)]
 pub struct AppState {
     /// 文件树的根节点
     pub root: FileItem,
+    /// 当前选中的目录路径
+    #[data(same_fn = "PartialEq::eq")]
+    pub selected_path: Option<PathBuf>,
+    /// 当前目录下的文件列表（用于右侧面板显示）
+    pub current_dir_files: Vector<FileDetail>,
 } 
