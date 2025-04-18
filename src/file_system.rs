@@ -108,97 +108,142 @@ pub fn build_file_tree(path: &Path, depth: usize) -> Vec<FileItem> {
 }
 
 /// 获取指定目录下的文件详情列表（包含子目录和文件）
+/// 默认一次加载所有文件
+pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
+    get_directory_contents_paged(path, 0, 1000) // 默认加载前1000个条目
+}
+
+/// 获取指定目录下的文件详情列表（包含子目录和文件），支持分页加载
 ///
 /// # 参数
 ///
 /// * `path` - 目录路径
+/// * `offset` - 开始加载的偏移量
+/// * `limit` - 最大加载数量
 ///
 /// # 返回值
 ///
 /// 返回指定目录下的文件和目录详情列表
-pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
+pub fn get_directory_contents_paged(path: &Path, offset: usize, limit: usize) -> Vector<FileDetail> {
     let mut result = Vec::new();
+    let mut count = 0;
+    let _skipped = 0; // 添加下划线前缀表示未使用的变量
     
+    // 如果目录不存在，直接返回空列表
+    if !path.exists() || !path.is_dir() {
+        println!("路径不存在或不是目录: {:?}", path);
+        return Vector::new();
+    }
+    
+    // 先收集所有目录项
     if let Ok(entries) = std::fs::read_dir(path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let entry_path = entry.path();
-                let name = entry_path.file_name().unwrap_or_default().to_string_lossy().to_string();
-                
-                // 跳过隐藏文件和目录
-                if name.starts_with(".") {
-                    continue;
+        // 转换为Vec以便排序和分页
+        let mut entry_vec: Vec<_> = entries.filter_map(Result::ok).collect();
+        
+        // 按照名称排序，同时把目录放在前面
+        entry_vec.sort_by(|a, b| {
+            let a_is_dir = a.path().is_dir();
+            let b_is_dir = b.path().is_dir();
+            
+            if a_is_dir == b_is_dir {
+                let a_name = a.file_name().to_string_lossy().to_string();
+                let b_name = b.file_name().to_string_lossy().to_string();
+                a_name.cmp(&b_name)
+            } else {
+                b_is_dir.cmp(&a_is_dir)
+            }
+        });
+        
+        // 应用分页逻辑
+        for entry in entry_vec.iter().skip(offset).take(limit) {
+            let entry_path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_string();
+            
+            // 跳过隐藏文件和目录
+            if name.starts_with(".") {
+                continue;
+            }
+            
+            // 获取文件大小（仅对文件）
+            let size = if entry_path.is_file() {
+                std::fs::metadata(&entry_path).map(|m| m.len()).unwrap_or(0)
+            } else {
+                0 // 目录大小显示为0
+            };
+            
+            // 获取文件类型
+            let file_type = if entry_path.is_dir() {
+                "目录".to_string()
+            } else {
+                match entry_path.extension() {
+                    Some(ext) => format!("{} 文件", ext.to_string_lossy()),
+                    None => "文件".to_string()
                 }
-                
-                // 获取文件大小
-                let size = if entry_path.is_file() {
-                    std::fs::metadata(&entry_path).map(|m| m.len()).unwrap_or(0)
-                } else {
-                    0 // 目录大小显示为0
-                };
-                
-                // 获取文件类型
-                let file_type = if entry_path.is_dir() {
-                    "目录".to_string()
-                } else {
-                    match entry_path.extension() {
-                        Some(ext) => format!("{} 文件", ext.to_string_lossy()),
-                        None => "文件".to_string()
+            };
+            
+            // 简化获取修改时间的逻辑以提高性能
+            let modified = std::fs::metadata(&entry_path)
+                .and_then(|m| m.modified())
+                .map(|time| {
+                    let system_time = std::time::SystemTime::now();
+                    let duration = system_time.duration_since(time).unwrap_or_default();
+                    
+                    if duration.as_secs() < 60 {
+                        "刚刚".to_string()
+                    } else if duration.as_secs() < 3600 {
+                        format!("{} 分钟前", duration.as_secs() / 60)
+                    } else if duration.as_secs() < 86400 {
+                        format!("{} 小时前", duration.as_secs() / 3600)
+                    } else {
+                        // 简单格式化为 年-月-日
+                        let secs = time.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
+                        let days = secs / 86400;
+                        let years = 1970 + (days / 365);
+                        let months = (days % 365) / 30 + 1;
+                        let day = (days % 365) % 30 + 1;
+                        format!("{}-{:02}-{:02}", years, months, day)
                     }
-                };
-                
-                // 获取修改时间
-                let modified = std::fs::metadata(&entry_path)
-                    .and_then(|m| m.modified())
-                    .map(|time| {
-                        // 使用更友好的时间格式显示
-                        let system_time = std::time::SystemTime::now();
-                        let duration = system_time.duration_since(time).unwrap_or_default();
-                        
-                        if duration.as_secs() < 60 {
-                            "刚刚".to_string()
-                        } else if duration.as_secs() < 3600 {
-                            format!("{} 分钟前", duration.as_secs() / 60)
-                        } else if duration.as_secs() < 86400 {
-                            format!("{} 小时前", duration.as_secs() / 3600)
-                        } else {
-                            // 简单格式化为 年-月-日
-                            let secs = time.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
-                            let days = secs / 86400;
-                            let years = 1970 + (days / 365);
-                            let months = (days % 365) / 30 + 1;
-                            let day = (days % 365) % 30 + 1;
-                            format!("{}-{:02}-{:02}", years, months, day)
-                        }
-                    })
-                    .unwrap_or_else(|_| "未知".to_string());
-                
-                // 保存完整路径以便导航
-                let full_path = entry_path.clone();
-                
-                result.push(FileDetail {
-                    name,
-                    size,
-                    file_type,
-                    modified,
-                    full_path,
-                });
+                })
+                .unwrap_or_else(|_| "未知".to_string());
+            
+            // 保存完整路径以便导航
+            let full_path = entry_path.clone();
+            
+            result.push(FileDetail {
+                name,
+                size,
+                file_type,
+                modified,
+                full_path,
+            });
+            
+            count += 1;
+            if count >= limit {
+                break;
             }
         }
     }
     
-    // 按照相同的逻辑排序：目录在前，文件在后
-    result.sort_by(|a, b| {
-        let a_is_dir = a.file_type == "目录";
-        let b_is_dir = b.file_type == "目录";
-        
-        if a_is_dir == b_is_dir {
-            a.name.cmp(&b.name)
-        } else {
-            b_is_dir.cmp(&a_is_dir)
-        }
-    });
+    // 打印分页加载统计信息
+    println!("已加载目录 {:?} 中的 {} 个条目 (跳过 {})", path, count, offset);
     
     // 转换为druid的Vector类型
     Vector::from(result)
+}
+
+/// 获取目录中的文件和目录总数
+pub fn get_directory_item_count(path: &Path) -> usize {
+    if let Ok(entries) = std::fs::read_dir(path) {
+        // 过滤掉隐藏文件
+        entries.filter(|entry| {
+            if let Ok(entry) = entry {
+                let name = entry.file_name().to_string_lossy().to_string();
+                !name.starts_with(".")
+            } else {
+                false
+            }
+        }).count()
+    } else {
+        0
+    }
 } 

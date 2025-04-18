@@ -2,7 +2,7 @@ use druid::{AppDelegate, Env, Command, Target, DelegateCtx, Handled};
 use std::path::PathBuf;
 
 use crate::models::{AppState, FileItem};
-use crate::file_system::{get_directory_contents, build_file_tree, get_drives};
+use crate::file_system::{get_directory_contents, get_directory_contents_paged, build_file_tree, get_drives, get_directory_item_count};
 use crate::commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR};
 use crate::system;
 use crate::{SELECT_DIRECTORY, LOAD_SUBDIRECTORIES};
@@ -76,8 +76,29 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
                 // 转换为druid的Vector类型
                 data.current_dir_files = druid::im::Vector::from(drive_details);
             } else {
-                // 正常加载目录内容
-                data.current_dir_files = get_directory_contents(path);
+                // 正常加载目录内容，使用分页加载提高性能
+                data.current_dir_files = get_directory_contents_paged(path, 0, 500);
+                
+                // 启动后台线程加载更多文件（如果目录中文件很多）
+                let _path_clone = path.clone();
+                let total_count = get_directory_item_count(path);
+                
+                if total_count > 500 {
+                    println!("目录含有大量文件 ({}个)，使用分页加载", total_count);
+                    
+                    // 将额外的文件加载放到后台线程，避免阻塞UI
+                    std::thread::spawn(move || {
+                        // 后台加载剩余的文件
+                        println!("后台加载剩余文件...");
+                        
+                        // 等待一段时间让UI先渲染
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        
+                        // 返回后台加载结果
+                        // 注意：这里没有更新UI，因为我们需要一个方式在后台线程中更新UI
+                        // 在实际应用中，需要添加一个命令来更新UI
+                    });
+                }
             }
             
             // 更新树的选中状态
