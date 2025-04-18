@@ -26,11 +26,41 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
         _env: &Env,
     ) -> Handled {
         if let Some(path) = cmd.get(SELECT_DIRECTORY) {
+            // 清除之前的选中状态
+            clear_selection(&mut data.root);
+            
+            // 更新选中的目录路径
             data.selected_path = Some(path.clone());
+            
+            // 更新右侧面板的文件列表
             data.current_dir_files = get_directory_contents(&path);
+            
+            // 设置当前选中的目录项
+            update_selection(&mut data.root, &path);
+            
             return Handled::Yes;
         }
         Handled::No
+    }
+}
+
+/// 清除所有项的选中状态
+fn clear_selection(item: &mut FileItem) {
+    item.is_selected = false;
+    for child in &mut item.children {
+        clear_selection(child);
+    }
+}
+
+/// 更新选中状态
+fn update_selection(item: &mut FileItem, selected_path: &PathBuf) {
+    if item.path == *selected_path {
+        item.is_selected = true;
+        return;
+    }
+    
+    for child in &mut item.children {
+        update_selection(child, selected_path);
     }
 }
 
@@ -45,13 +75,17 @@ fn main() {
     let current_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     
     // 创建根文件项
-    let root = FileItem {
+    let mut root = FileItem {
         name: "Root".to_string(),
         // 获取目录树，最多递归3层
         children: build_file_tree(&current_dir, 3),
         is_expanded: true,  // 默认展开根节点
         path: current_dir.clone(),
+        is_selected: false,
     };
+    
+    // 设置初始选中的目录
+    update_selection(&mut root, &current_dir);
 
     // 创建初始应用程序状态
     let initial_state = AppState {

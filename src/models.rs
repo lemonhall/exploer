@@ -15,6 +15,8 @@ pub struct FileItem {
     /// 文件路径
     #[data(same_fn = "PartialEq::eq")]
     pub path: PathBuf,
+    /// 当前项是否被选中
+    pub is_selected: bool,
 }
 
 /// 实现TreeNode特性，使FileItem可以在Tree控件中使用

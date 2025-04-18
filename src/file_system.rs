@@ -46,7 +46,8 @@ pub fn build_file_tree(path: &Path, depth: usize) -> Vec<FileItem> {
                     name, 
                     children,
                     is_expanded: false,
-                    path: path_buf
+                    path: path_buf,
+                    is_selected: false,
                 });
             }
         }

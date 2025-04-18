@@ -1,8 +1,14 @@
-use druid::widget::{Flex, Label, Scroll, Container, Split, List, Painter};
-use druid::{Widget, WidgetExt, Color, RenderContext};
+use druid::widget::{Flex, Label, Scroll, Container, Split, List, Painter, SizedBox};
+use druid::{Widget, WidgetExt, Color, RenderContext, Rect, Point};
 use druid_widget_nursery::Tree;
 use crate::models::{AppState, FileItem, FileDetail};
 use crate::SELECT_DIRECTORY;
+
+/// 当前选中项的背景颜色（浅蓝色）
+const SELECTED_COLOR: Color = Color::rgb8(204, 232, 255);
+
+/// 鼠标悬停项的背景颜色（更浅的蓝色）
+const HOVERED_COLOR: Color = Color::rgb8(229, 243, 255);
 
 /// 构建目录树视图（左侧面板）
 fn build_directory_tree() -> impl Widget<AppState> {
@@ -11,14 +17,53 @@ fn build_directory_tree() -> impl Widget<AppState> {
         || {
             // 为每个目录项创建水平布局
             Flex::row()
-                // 添加展开/折叠图标
-                .with_child(Label::dynamic(|item: &FileItem, _| {
-                    if item.is_expanded {
-                        "▼ ".to_string()
-                    } else {
-                        "► ".to_string()
-                    }
-                }))
+                // 添加缩进指示器
+                .with_child(SizedBox::empty().fix_width(4.0))
+                // 添加展开/折叠图标和文件夹图标
+                .with_child(
+                    Painter::new(|ctx, item: &FileItem, _env| {
+                        // 绘制简单的文件夹图标
+                        let rect = ctx.size().to_rect();
+                        let icon_size = rect.size();
+                        
+                        // 文件夹底部
+                        let folder_bottom = Rect::from_origin_size(
+                            Point::new(rect.x0 + 1.0, rect.y0 + 3.0),
+                            (icon_size.width - 2.0, icon_size.height - 4.0)
+                        );
+                        ctx.fill(folder_bottom, &Color::rgb8(255, 209, 94));
+                        
+                        // 文件夹顶部
+                        let folder_top = Rect::from_origin_size(
+                            Point::new(rect.x0 + 1.0, rect.y0 + 1.0),
+                            (icon_size.width * 0.6, 3.0)
+                        );
+                        ctx.fill(folder_top, &Color::rgb8(255, 209, 94));
+                        
+                        // 展开/折叠标记
+                        if item.is_expanded {
+                            let mark = Rect::from_origin_size(
+                                Point::new(rect.x0 + 5.0, rect.y0 + 7.0),
+                                (6.0, 2.0)
+                            );
+                            ctx.fill(mark, &Color::rgb8(95, 99, 104));
+                        } else {
+                            let mark_h = Rect::from_origin_size(
+                                Point::new(rect.x0 + 5.0, rect.y0 + 7.0),
+                                (6.0, 2.0)
+                            );
+                            ctx.fill(mark_h, &Color::rgb8(95, 99, 104));
+                            
+                            let mark_v = Rect::from_origin_size(
+                                Point::new(rect.x0 + 7.0, rect.y0 + 5.0),
+                                (2.0, 6.0)
+                            );
+                            ctx.fill(mark_v, &Color::rgb8(95, 99, 104));
+                        }
+                    })
+                    .fix_size(16.0, 16.0)
+                    .padding((2.0, 2.0))
+                )
                 // 添加目录名标签
                 .with_child(
                     Label::dynamic(|item: &FileItem, _| item.name.clone())
@@ -31,14 +76,27 @@ fn build_directory_tree() -> impl Widget<AppState> {
                         ctx.submit_command(SELECT_DIRECTORY.with(path));
                     })
                 )
+                // 添加背景颜色效果
+                .background(
+                    Painter::new(|ctx, item: &FileItem, _env| {
+                        let rect = ctx.size().to_rect();
+                        
+                        if item.is_selected {
+                            ctx.fill(rect, &SELECTED_COLOR);
+                        }
+                    })
+                )
+                .expand_width()
+                .height(24.0) // 固定高度使布局更整齐
         },
         FileItem::is_expanded,
     )
     .lens(AppState::root);
 
-    // 使用Container包装Tree控件，添加内边距
+    // 使用Container包装Tree控件，添加内边距和背景色
     let tree_with_padding = Container::new(tree)
-        .padding((10.0, 10.0, 10.0, 20.0));
+        .padding((10.0, 10.0, 10.0, 20.0))
+        .background(Color::rgb8(248, 249, 250)); // 浅灰色背景，类似Windows资源管理器
 
     // 使用Scroll包装带边距的树形控件，使其可滚动
     Scroll::new(tree_with_padding)
