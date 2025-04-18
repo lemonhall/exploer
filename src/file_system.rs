@@ -1,7 +1,49 @@
 use std::path::Path;
+use std::path::PathBuf;
 use std::time::SystemTime;
 use druid::im::Vector;
 use crate::models::{FileItem, FileDetail};
+
+/// 获取系统上所有可用的驱动器（盘符）
+/// 在Windows上返回所有可用的盘符（如C:, D:等）
+/// 在其他系统上返回根目录 "/"
+pub fn get_drives() -> Vec<FileItem> {
+    let mut drives = Vec::new();
+    
+    #[cfg(target_os = "windows")]
+    {
+        // 在Windows上，尝试检查所有可能的盘符（A-Z）
+        for c in b'A'..=b'Z' {
+            let drive = format!("{}:\\", char::from(c));
+            let path = PathBuf::from(&drive);
+            
+            // 检查该盘符是否存在
+            if path.exists() {
+                drives.push(FileItem {
+                    name: drive.clone(),
+                    children: Vec::new(), // 初始为空，稍后按需加载
+                    is_expanded: false,
+                    path,
+                    is_selected: false,
+                });
+            }
+        }
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    {
+        // 在非Windows系统上，只添加根目录
+        drives.push(FileItem {
+            name: "/".to_string(),
+            children: Vec::new(),
+            is_expanded: false,
+            path: PathBuf::from("/"),
+            is_selected: false,
+        });
+    }
+    
+    drives
+}
 
 /// 构建目录树（只包含目录，不包含文件）
 /// 
