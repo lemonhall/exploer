@@ -10,6 +10,12 @@ const SELECTED_COLOR: Color = Color::rgb8(204, 232, 255);
 /// 鼠标悬停项的背景颜色（更浅的蓝色）
 const HOVERED_COLOR: Color = Color::rgb8(229, 243, 255);
 
+/// 深色主题背景色
+const DARK_BACKGROUND: Color = Color::rgb8(32, 32, 32);
+
+/// 深色主题文本颜色
+const DARK_TEXT: Color = Color::rgb8(230, 230, 230);
+
 /// 构建目录树视图（左侧面板）
 fn build_directory_tree() -> impl Widget<AppState> {
     // 创建树形控件
@@ -46,19 +52,19 @@ fn build_directory_tree() -> impl Widget<AppState> {
                                 Point::new(rect.x0 + 5.0, rect.y0 + 7.0),
                                 (6.0, 2.0)
                             );
-                            ctx.fill(mark, &Color::rgb8(95, 99, 104));
+                            ctx.fill(mark, &Color::rgb8(200, 200, 200));
                         } else {
                             let mark_h = Rect::from_origin_size(
                                 Point::new(rect.x0 + 5.0, rect.y0 + 7.0),
                                 (6.0, 2.0)
                             );
-                            ctx.fill(mark_h, &Color::rgb8(95, 99, 104));
+                            ctx.fill(mark_h, &Color::rgb8(200, 200, 200));
                             
                             let mark_v = Rect::from_origin_size(
                                 Point::new(rect.x0 + 7.0, rect.y0 + 5.0),
                                 (2.0, 6.0)
                             );
-                            ctx.fill(mark_v, &Color::rgb8(95, 99, 104));
+                            ctx.fill(mark_v, &Color::rgb8(200, 200, 200));
                         }
                     })
                     .fix_size(16.0, 16.0)
@@ -67,6 +73,7 @@ fn build_directory_tree() -> impl Widget<AppState> {
                 // 添加目录名标签
                 .with_child(
                     Label::dynamic(|item: &FileItem, _| item.name.clone())
+                    .with_text_color(DARK_TEXT)
                     .padding((0.0, 5.0, 5.0, 5.0))
                     // 点击目录时更新当前选中的目录路径
                     .on_click(|ctx, data: &mut FileItem, _| {
@@ -96,7 +103,7 @@ fn build_directory_tree() -> impl Widget<AppState> {
     // 使用Container包装Tree控件，添加内边距和背景色
     let tree_with_padding = Container::new(tree)
         .padding((10.0, 10.0, 10.0, 20.0))
-        .background(Color::rgb8(248, 249, 250)); // 浅灰色背景，类似Windows资源管理器
+        .background(DARK_BACKGROUND); // 使用深色背景
 
     // 使用Scroll包装带边距的树形控件，使其可滚动
     Scroll::new(tree_with_padding)
@@ -169,7 +176,7 @@ fn build_file_list() -> impl Widget<AppState> {
         .with_child(Label::new("大小").padding(5.0).fix_width(100.0))
         .with_child(Label::new("类型").padding(5.0).fix_width(100.0))
         .with_child(Label::new("修改日期").padding(5.0).fix_width(150.0))
-        .background(Color::rgb8(230, 230, 230));
+        .background(Color::rgb8(50, 50, 50));
     
     // 组合标题行和文件列表
     let file_view = Flex::column()
@@ -179,6 +186,7 @@ fn build_file_list() -> impl Widget<AppState> {
     // 添加内边距并返回
     Container::new(file_view)
         .padding(10.0)
+        .background(DARK_BACKGROUND) // 右侧也使用相同的深色背景
         .expand()
 }
 
@@ -213,5 +221,6 @@ pub fn build_ui() -> impl Widget<AppState> {
     // 使用Container包装分割视图，提供边距
     Container::new(split)
         .padding(5.0)
+        .background(DARK_BACKGROUND) // 整个应用使用深色背景
         .expand()
 } 
