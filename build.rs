@@ -42,5 +42,6 @@ fn main() {
         
         // 标记需要重新运行的条件
         println!("cargo:rerun-if-changed=src/assets/icon.ico");
+        println!("cargo:rerun-if-changed=build.rs");
     }
 } 

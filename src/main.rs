@@ -1,4 +1,5 @@
 // 声明模块
+#![windows_subsystem = "windows"]
 mod models;
 mod file_system;
 mod ui;
