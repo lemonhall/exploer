@@ -1,20 +1,25 @@
-use druid::widget::{Button, Flex, TextBox, Label, SizedBox};
-use druid::{Widget, WidgetExt, Color, UnitPoint, FontWeight, FontStyle, Data, Lens, EventCtx, Target};
+use druid::widget::{Button, Flex, TextBox, Align};
+use druid::{Widget, WidgetExt, Color, Data, Lens};
 use crate::models::AppState;
 use super::constants::*;
 use std::path::PathBuf;
-use crate::commands::*;
 use crate::SELECT_DIRECTORY;
 
 /// 构建导航栏（顶部工具栏）
 pub fn build_navigation_bar() -> impl Widget<AppState> {
     // 创建水平布局
     let mut nav_bar = Flex::row()
+        .with_spacer(5.0) // 左侧边距
         .with_child(build_back_button())
+        .with_spacer(2.0) // 按钮之间的间距
         .with_child(build_forward_button())
+        .with_spacer(2.0)
         .with_child(build_up_button())
+        .with_spacer(2.0)
         .with_child(build_refresh_button())
-        .with_child(build_home_button());
+        .with_spacer(2.0)
+        .with_child(build_home_button())
+        .with_spacer(8.0); // 地址栏前的更大间距
 
     // 添加地址栏
     let address_box = TextBox::new()
@@ -25,101 +30,120 @@ pub fn build_navigation_bar() -> impl Widget<AppState> {
     // 将地址栏添加到导航栏
     nav_bar.add_flex_child(address_box, 1.0);
     
-    // 添加转到按钮
+    // 添加转到按钮和右侧间距
+    nav_bar.add_spacer(5.0);
     nav_bar.add_child(build_goto_button());
+    nav_bar.add_spacer(5.0);
 
     // 包装导航栏，添加样式
     nav_bar
-        .padding(8.0)
+        .padding((0.0, 8.0)) // 垂直方向增加内边距
         .background(NAV_BAR_BACKGROUND)
         .expand_width()
 }
 
+/// 创建导航图标的标签文本
+fn build_icon_label(text: &str) -> String {
+    text.to_string()
+}
+
 /// 构建后退按钮
 fn build_back_button() -> impl Widget<AppState> {
-    Button::new("⬅️")
-        .on_click(|ctx, data: &mut AppState, _env| {
-            if let Some(path) = data.navigate_back() {
-                ctx.submit_command(SELECT_DIRECTORY.with(path));
-            }
-        })
-        .padding(5.0)
-        .fix_width(36.0)
-        .fix_height(36.0)
+    Align::centered(
+        Button::new("⬅")
+            .on_click(|ctx, data: &mut AppState, _env| {
+                if let Some(path) = data.navigate_back() {
+                    ctx.submit_command(SELECT_DIRECTORY.with(path));
+                }
+            })
+            .fix_width(36.0)
+            .fix_height(36.0)
+            .border(Color::TRANSPARENT, 0.0)
+    )
 }
 
 /// 构建前进按钮
 fn build_forward_button() -> impl Widget<AppState> {
-    Button::new("➡️")
-        .on_click(|ctx, data: &mut AppState, _env| {
-            if let Some(path) = data.navigate_forward() {
-                ctx.submit_command(SELECT_DIRECTORY.with(path));
-            }
-        })
-        .padding(5.0)
-        .fix_width(36.0)
-        .fix_height(36.0)
+    Align::centered(
+        Button::new("➡")
+            .on_click(|ctx, data: &mut AppState, _env| {
+                if let Some(path) = data.navigate_forward() {
+                    ctx.submit_command(SELECT_DIRECTORY.with(path));
+                }
+            })
+            .fix_width(36.0)
+            .fix_height(36.0)
+            .border(Color::TRANSPARENT, 0.0)
+    )
 }
 
 /// 构建上级目录按钮
 fn build_up_button() -> impl Widget<AppState> {
-    Button::new("⬆️")
-        .on_click(|ctx, data: &mut AppState, _env| {
-            if let Some(current_path) = data.selected_path.clone() {
-                if let Some(parent) = current_path.parent() {
-                    // 创建父目录路径的拷贝
-                    let parent_path = parent.to_path_buf();
-                    
-                    // 添加到历史记录
-                    data.add_to_history(parent_path.clone());
-                    
-                    // 发送命令导航到父目录
-                    ctx.submit_command(SELECT_DIRECTORY.with(parent_path));
+    Align::centered(
+        Button::new("⬆")
+            .on_click(|ctx, data: &mut AppState, _env| {
+                if let Some(current_path) = data.selected_path.clone() {
+                    if let Some(parent) = current_path.parent() {
+                        // 创建父目录路径的拷贝
+                        let parent_path = parent.to_path_buf();
+                        
+                        // 添加到历史记录
+                        data.add_to_history(parent_path.clone());
+                        
+                        // 发送命令导航到父目录
+                        ctx.submit_command(SELECT_DIRECTORY.with(parent_path));
+                    }
                 }
-            }
-        })
-        .padding(5.0)
-        .fix_width(36.0)
-        .fix_height(36.0)
+            })
+            .fix_width(36.0)
+            .fix_height(36.0)
+            .border(Color::TRANSPARENT, 0.0)
+    )
 }
 
 /// 构建刷新按钮
 fn build_refresh_button() -> impl Widget<AppState> {
-    Button::new("🔄")
-        .on_click(|ctx, data: &mut AppState, _env| {
-            if let Some(path) = &data.selected_path {
-                // 重新导航到当前路径，刷新内容
-                ctx.submit_command(SELECT_DIRECTORY.with(path.clone()));
-            }
-        })
-        .padding(5.0)
-        .fix_width(36.0)
-        .fix_height(36.0)
+    Align::centered(
+        Button::new("🔄")
+            .on_click(|ctx, data: &mut AppState, _env| {
+                if let Some(path) = &data.selected_path {
+                    // 重新导航到当前路径，刷新内容
+                    ctx.submit_command(SELECT_DIRECTORY.with(path.clone()));
+                }
+            })
+            .fix_width(36.0)
+            .fix_height(36.0)
+            .border(Color::TRANSPARENT, 0.0)
+    )
 }
 
 /// 构建主目录按钮
 fn build_home_button() -> impl Widget<AppState> {
-    Button::new("🏠")
-        .on_click(|ctx, _data: &mut AppState, _env| {
-            if let Some(home_dir) = dirs::home_dir() {
-                ctx.submit_command(SELECT_DIRECTORY.with(home_dir));
-            }
-        })
-        .padding(5.0)
-        .fix_width(36.0)
-        .fix_height(36.0)
+    Align::centered(
+        Button::new("🏠")
+            .on_click(|ctx, _data: &mut AppState, _env| {
+                if let Some(home_dir) = dirs::home_dir() {
+                    ctx.submit_command(SELECT_DIRECTORY.with(home_dir));
+                }
+            })
+            .fix_width(36.0)
+            .fix_height(36.0)
+            .border(Color::TRANSPARENT, 0.0)
+    )
 }
 
 /// 构建转到按钮
 fn build_goto_button() -> impl Widget<AppState> {
-    Button::new("➥")
-        .on_click(|_ctx, _data: &mut AppState, _env| {
-            // 这里暂时不需要操作，因为TextBox的lens已经更新了path
-            // 地址变更会自动通过lens处理
-        })
-        .padding(5.0)
-        .fix_width(36.0)
-        .fix_height(36.0)
+    Align::centered(
+        Button::new("➥")
+            .on_click(|_ctx, _data: &mut AppState, _env| {
+                // 这里暂时不需要操作，因为TextBox的lens已经更新了path
+                // 地址变更会自动通过lens处理
+            })
+            .fix_width(36.0)
+            .fix_height(36.0)
+            .border(Color::TRANSPARENT, 0.0)
+    )
 }
 
 /// 为当前路径字符串创建Lens
