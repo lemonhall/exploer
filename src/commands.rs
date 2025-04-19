@@ -1,7 +1,5 @@
 use druid::Selector;
 use std::path::PathBuf;
-use druid::im::Vector;
-use crate::models::FileDetail;
 
 /// 导航到指定路径的命令
 pub const NAVIGATE_TO: Selector<PathBuf> = Selector::new("file-explorer.navigate-to");
