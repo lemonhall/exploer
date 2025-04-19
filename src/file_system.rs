@@ -110,7 +110,7 @@ pub fn build_file_tree(path: &Path, depth: usize) -> Vec<FileItem> {
 /// 获取指定目录下的文件详情列表（包含子目录和文件）
 /// 默认一次加载所有文件
 pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
-    get_directory_contents_paged(path, 0, 1000) // 默认加载前1000个条目
+    get_directory_contents_paged(path, 0, 100) // 默认加载前100个条目
 }
 
 /// 获取指定目录下的文件详情列表（包含子目录和文件），支持分页加载

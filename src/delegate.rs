@@ -1,9 +1,10 @@
 use druid::{AppDelegate, Env, Command, Target, DelegateCtx, Handled};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 
 use crate::models::{AppState, FileItem};
 use crate::file_system::{get_directory_contents, get_directory_contents_paged, build_file_tree, get_drives, get_directory_item_count};
-use crate::commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR};
+use crate::commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR, UPDATE_FILE_LIST};
 use crate::system;
 use crate::{SELECT_DIRECTORY, LOAD_SUBDIRECTORIES};
 use crate::utils::format_size;
@@ -14,7 +15,7 @@ pub struct FileExplorerDelegate;
 impl AppDelegate<AppState> for FileExplorerDelegate {
     fn command(
         &mut self,
-        _ctx: &mut DelegateCtx,
+        ctx: &mut DelegateCtx,
         _target: Target,
         cmd: &Command,
         data: &mut AppState,
@@ -77,26 +78,34 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
                 data.current_dir_files = druid::im::Vector::from(drive_details);
             } else {
                 // 正常加载目录内容，使用分页加载提高性能
-                data.current_dir_files = get_directory_contents_paged(path, 0, 500);
+                data.current_dir_files = get_directory_contents_paged(path, 0, 100);
                 
                 // 启动后台线程加载更多文件（如果目录中文件很多）
-                let _path_clone = path.clone();
+                let path_clone = path.clone();
                 let total_count = get_directory_item_count(path);
                 
-                if total_count > 500 {
-                    println!("目录含有大量文件 ({}个)，使用分页加载", total_count);
+                if total_count > 100 {
+                    println!("目录含有大量文件 ({}个)，使用分页加载，初始加载100个", total_count);
+                    
+                    // 创建一个线程安全的上下文引用，供后台线程使用
+                    let event_sink = ctx.get_external_handle();
                     
                     // 将额外的文件加载放到后台线程，避免阻塞UI
                     std::thread::spawn(move || {
-                        // 后台加载剩余的文件
+                        // 后台加载剩余的所有文件
                         println!("后台加载剩余文件...");
                         
                         // 等待一段时间让UI先渲染
                         std::thread::sleep(std::time::Duration::from_millis(100));
                         
-                        // 返回后台加载结果
-                        // 注意：这里没有更新UI，因为我们需要一个方式在后台线程中更新UI
-                        // 在实际应用中，需要添加一个命令来更新UI
+                        // 加载所有文件（这里使用一个足够大的数字，比如10000）
+                        let all_files = get_directory_contents_paged(&path_clone, 0, 10000);
+                        println!("后台加载完成，总共加载 {} 个文件", all_files.len());
+                        
+                        // 发送命令更新UI
+                        if let Err(e) = event_sink.submit_command(UPDATE_FILE_LIST, all_files, Target::Auto) {
+                            eprintln!("更新文件列表失败: {:?}", e);
+                        }
                     });
                 }
             }
@@ -111,6 +120,11 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
             Handled::Yes
         } else if let Some(()) = cmd.get(RESET_CURSOR) {
             // 处理重置光标命令
+            Handled::Yes
+        } else if let Some(files) = cmd.get(UPDATE_FILE_LIST) {
+            // 处理更新文件列表命令
+            println!("收到后台加载的文件列表，更新UI，文件数量: {}", files.len());
+            data.current_dir_files = files.clone();
             Handled::Yes
         } else {
             Handled::No
