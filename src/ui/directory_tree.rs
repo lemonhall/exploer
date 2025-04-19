@@ -11,14 +11,14 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
     let tree = Tree::new(
         || {
             // 为每个目录项创建水平布局
-            let mut row = Flex::row()
+            let row = Flex::row()
                 .cross_axis_alignment(CrossAxisAlignment::Center); // 设置交叉轴对齐
                 
             // 添加缩进指示器
-            row.add_child(SizedBox::empty().fix_width(4.0));
+            let row = row.with_child(SizedBox::empty().fix_width(4.0));
                 
             // 添加展开/折叠图标和文件夹图标
-            row.add_child(
+            let row = row.with_child(
                 Painter::new(|ctx, item: &FileItem, _env| {
                     if item.name == "我的电脑" {
                         println!("绘制我的电脑图标, 展开状态: {}, 子项数: {}", 
@@ -99,40 +99,40 @@ pub fn build_directory_tree() -> impl Widget<AppState> {
             );
             
             // 添加目录名标签
-            row.add_child(
+            let row = row.with_child(
                 Label::dynamic(|item: &FileItem, _| item.name.clone())
                 .with_text_color(SELECTED_TEXT) // 统一使用亮色文本，与深色背景形成对比
                 .with_text_size(14.0) // 明确设置字体大小
                 .padding((8.0, 0.0)) // 从4.0增加到8.0，增加文本与周围元素的间距
-                // 点击目录名时选择目录并更新右侧面板
-                .on_click(|ctx, data: &mut FileItem, _| {
-                    // 处理我的电脑节点
-                    if data.name == "我的电脑" {
-                        // 确保我的电脑节点始终处于展开状态
-                        data.is_expanded = true;
-                        println!("点击我的电脑标签 - 保持展开状态");
-                    }
-                    
-                    // 获取当前点击的目录路径
-                    let path = data.path.clone();
-                    
-                    // 如果是折叠状态，则展开并加载子目录
-                    if !data.is_expanded {
-                        data.is_expanded = true;
-                        
-                        // 如果没有子目录，则请求加载
-                        if data.children.is_empty() {
-                            ctx.submit_command(LOAD_SUBDIRECTORIES.with(path.clone()));
-                        }
-                    }
-                    
-                    // 发送选择目录命令，更新右侧面板
-                    ctx.submit_command(SELECT_DIRECTORY.with(path));
-                })
+                .expand_width() // 让标签占据所有可用宽度
             );
             
-            // 添加背景颜色效果
-            row.background(
+            // 整个行加上点击事件和背景
+            row.on_click(|ctx, data: &mut FileItem, _| {
+                // 处理我的电脑节点
+                if data.name == "我的电脑" {
+                    // 确保我的电脑节点始终处于展开状态
+                    data.is_expanded = true;
+                    println!("点击我的电脑标签 - 保持展开状态");
+                }
+                
+                // 获取当前点击的目录路径
+                let path = data.path.clone();
+                
+                // 如果是折叠状态，则展开并加载子目录
+                if !data.is_expanded {
+                    data.is_expanded = true;
+                    
+                    // 如果没有子目录，则请求加载
+                    if data.children.is_empty() {
+                        ctx.submit_command(LOAD_SUBDIRECTORIES.with(path.clone()));
+                    }
+                }
+                
+                // 发送选择目录命令，更新右侧面板
+                ctx.submit_command(SELECT_DIRECTORY.with(path));
+            })
+            .background(
                 Painter::new(|ctx, item: &FileItem, _env| {
                     let rect = ctx.size().to_rect();
                     
