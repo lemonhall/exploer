@@ -101,11 +101,16 @@ fn create_initial_state() -> AppState {
     // 设置默认选中的驱动器
     update_selection(&mut root, &default_drive);
 
+    // 创建初始导航历史记录
+    let navigation_history = vec![default_drive.clone()];
+    
     // 创建初始应用程序状态
     AppState {
         root,
         selected_path: Some(default_drive.clone()),
         current_dir_files: get_directory_contents(&default_drive),
+        navigation_history,
+        history_position: 0,
     }
 }
 

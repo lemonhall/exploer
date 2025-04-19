@@ -16,7 +16,7 @@ impl<W: Widget<FileDetail>> Controller<FileDetail, W> for DirectoryItemControlle
                 // 导航到该目录
                 ctx.submit_command(Command::new(
                     NAVIGATE_TO,
-                    data.full_path.clone().to_string_lossy().to_string(),
+                    data.full_path.clone(),
                     Target::Auto
                 ));
                 

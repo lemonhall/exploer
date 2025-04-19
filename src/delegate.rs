@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use crate::models::{AppState, FileItem};
 use crate::file_system::{get_directory_contents, get_directory_contents_paged, build_file_tree, get_drives, get_directory_item_count};
-use crate::commands::{NAVIGATE_TO, OPEN_FILE, RESET_CURSOR, UPDATE_FILE_LIST};
+use crate::commands::*;
 use crate::system;
 use crate::{SELECT_DIRECTORY, LOAD_SUBDIRECTORIES};
 use crate::utils::format_size;
@@ -43,6 +43,9 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
         } else if let Some(path) = cmd.get(SELECT_DIRECTORY) {
             // 处理选择目录命令
             data.selected_path = Some(path.clone());
+            
+            // 添加路径到导航历史记录
+            data.add_to_history(path.clone());
             
             // 特殊处理"我的电脑"，直接加载驱动器列表到右侧面板
             let is_computer = find_item_by_path(&data.root, path)
@@ -124,6 +127,74 @@ impl AppDelegate<AppState> for FileExplorerDelegate {
             // 处理更新文件列表命令
             println!("收到后台加载的文件列表，更新UI，文件数量: {}", files.len());
             data.current_dir_files = files.clone();
+            Handled::Yes
+        } else if let Some(()) = cmd.get(NAVIGATE_UP) {
+            // 处理上级目录导航命令
+            if let Some(current_path) = data.selected_path.clone() {
+                if let Some(parent) = current_path.parent() {
+                    // 创建路径的可拥有拷贝
+                    let parent_path = parent.to_path_buf();
+                    
+                    // 先获取目录内容
+                    let directory_contents = get_directory_contents(parent);
+                    
+                    // 添加到历史记录并更新当前路径
+                    data.add_to_history(parent_path.clone());
+                    data.selected_path = Some(parent_path.clone());
+                    
+                    // 更新UI
+                    data.current_dir_files = directory_contents;
+                    
+                    // 更新树的选中状态
+                    update_selection(&mut data.root, &parent_path);
+                }
+            }
+            Handled::Yes
+        } else if let Some(()) = cmd.get(NAVIGATE_HOME) {
+            // 处理导航到主目录命令
+            if let Some(home_dir) = dirs::home_dir() {
+                // 添加到历史记录并更新当前路径
+                data.add_to_history(home_dir.clone());
+                data.selected_path = Some(home_dir.clone());
+                
+                // 获取目录内容并更新UI
+                data.current_dir_files = get_directory_contents(&home_dir);
+                
+                // 更新树的选中状态
+                update_selection(&mut data.root, &home_dir);
+            }
+            Handled::Yes
+        } else if let Some(()) = cmd.get(REFRESH_DIRECTORY) {
+            // 处理刷新当前目录命令
+            if let Some(path) = &data.selected_path {
+                data.current_dir_files = get_directory_contents(path);
+            }
+            Handled::Yes
+        } else if let Some(()) = cmd.get(NAVIGATE_BACK) {
+            // 处理后退命令
+            if let Some(path) = data.navigate_back() {
+                // 更新当前路径
+                data.selected_path = Some(path.clone());
+                
+                // 获取目录内容并更新UI
+                data.current_dir_files = get_directory_contents(&path);
+                
+                // 更新树的选中状态
+                update_selection(&mut data.root, &path);
+            }
+            Handled::Yes
+        } else if let Some(()) = cmd.get(NAVIGATE_FORWARD) {
+            // 处理前进命令
+            if let Some(path) = data.navigate_forward() {
+                // 更新当前路径
+                data.selected_path = Some(path.clone());
+                
+                // 获取目录内容并更新UI
+                data.current_dir_files = get_directory_contents(&path);
+                
+                // 更新树的选中状态
+                update_selection(&mut data.root, &path);
+            }
             Handled::Yes
         } else {
             Handled::No

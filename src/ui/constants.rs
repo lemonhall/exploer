@@ -13,6 +13,9 @@ pub const HOVER_COLOR: Color = Color::rgb8(50, 50, 60);
 /// 深色主题背景色
 pub const DARK_BACKGROUND: Color = Color::rgb8(32, 32, 32);
 
+/// 导航栏背景色（略微比主背景亮）
+pub const NAV_BAR_BACKGROUND: Color = Color::rgb8(42, 42, 42);
+
 /// 深色主题文本颜色
 #[allow(dead_code)]
 pub const DARK_TEXT: Color = Color::rgb8(230, 230, 230);
