@@ -1,5 +1,5 @@
 use druid::widget::{Flex, Label, Scroll, Container, Painter, SizedBox, CrossAxisAlignment};
-use druid::{Widget, WidgetExt, RenderContext, Rect, Point, Size, Color};
+use druid::{Widget, WidgetExt, RenderContext, Rect, Point, Color};
 use druid_widget_nursery::Tree;
 use crate::models::{AppState, FileItem};
 use crate::{SELECT_DIRECTORY, LOAD_SUBDIRECTORIES};

@@ -1,6 +1,5 @@
 use druid::{AppDelegate, Env, Command, Target, DelegateCtx, Handled};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
 
 use crate::models::{AppState, FileItem};
 use crate::file_system::{get_directory_contents, get_directory_contents_paged, build_file_tree, get_drives, get_directory_item_count};
