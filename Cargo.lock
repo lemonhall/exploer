@@ -600,6 +600,7 @@ dependencies = [
  "druid",
  "druid-widget-nursery",
  "im",
+ "lazy_static",
  "windows",
  "windows-sys 0.48.0",
  "winit",

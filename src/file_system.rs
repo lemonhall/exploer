@@ -1,8 +1,42 @@
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::SystemTime;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, Once};
 use druid::im::Vector;
 use crate::models::{FileItem, FileDetail};
+
+// 全局目录缓存
+lazy_static::lazy_static! {
+    static ref DIRECTORY_CACHE: Arc<Mutex<HashMap<PathBuf, Vector<FileDetail>>>> = 
+        Arc::new(Mutex::new(HashMap::new()));
+    
+    // 缓存初始化状态
+    static ref CACHE_INIT: Once = Once::new();
+}
+
+// 缓存有效期（秒）
+const CACHE_TTL: u64 = 30;
+// 缓存大小限制
+const MAX_CACHE_ENTRIES: usize = 100;
+
+// 带时间戳的缓存条目
+struct CacheEntry<T> {
+    data: T,
+    timestamp: SystemTime,
+}
+
+/// 清理过期缓存
+fn clean_cache() {
+    let mut cache = DIRECTORY_CACHE.lock().unwrap();
+    if cache.len() > MAX_CACHE_ENTRIES {
+        // 如果缓存太大，清理一半
+        let paths: Vec<PathBuf> = cache.keys().cloned().collect();
+        for i in 0..(paths.len() / 2) {
+            cache.remove(&paths[i]);
+        }
+    }
+}
 
 /// 获取系统上所有可用的驱动器（盘符）
 /// 在Windows上返回所有可用的盘符（如C:, D:等）
@@ -108,26 +142,41 @@ pub fn build_file_tree(path: &Path, depth: usize) -> Vec<FileItem> {
 }
 
 /// 获取指定目录下的文件详情列表（包含子目录和文件）
-/// 默认一次加载所有文件
+/// 默认一次加载页面显示所需数量
 pub fn get_directory_contents(path: &Path) -> Vector<FileDetail> {
-    get_directory_contents_paged(path, 0, 100) // 默认加载前100个条目
+    get_directory_contents_paged(path, 0, 30) // 默认只加载前30个，足够填满一个屏幕
 }
 
-/// 获取指定目录下的文件详情列表（包含子目录和文件），支持分页加载
-///
-/// # 参数
-///
-/// * `path` - 目录路径
-/// * `offset` - 开始加载的偏移量
-/// * `limit` - 最大加载数量
-///
-/// # 返回值
-///
-/// 返回指定目录下的文件和目录详情列表
+/// 获取指定目录下的文件详情列表（包含子目录和文件），优先从缓存加载，支持分页
 pub fn get_directory_contents_paged(path: &Path, offset: usize, limit: usize) -> Vector<FileDetail> {
+    // 查询缓存
+    let path_buf = path.to_path_buf();
+    
+    // 尝试从缓存获取
+    {
+        let cache = DIRECTORY_CACHE.lock().unwrap();
+        if let Some(cached_data) = cache.get(&path_buf) {
+            println!("从缓存加载目录: {:?}", path);
+            
+            // 如果请求的数量足够小，直接从缓存返回
+            if offset + limit <= cached_data.len() {
+                if offset == 0 {
+                    return cached_data.clone();
+                } else {
+                    // 截取所需部分
+                    return cached_data.iter()
+                        .skip(offset)
+                        .take(limit)
+                        .cloned()
+                        .collect::<Vector<_>>();
+                }
+            }
+        }
+    }
+    
+    // 如果缓存中没有或数量不足，从文件系统加载
     let mut result = Vec::new();
     let mut count = 0;
-    let _skipped = 0; // 添加下划线前缀表示未使用的变量
     
     // 如果目录不存在，直接返回空列表
     if !path.exists() || !path.is_dir() {
@@ -225,10 +274,50 @@ pub fn get_directory_contents_paged(path: &Path, offset: usize, limit: usize) ->
     }
     
     // 打印分页加载统计信息
-    println!("已加载目录 {:?} 中的 {} 个条目 (跳过 {})", path, count, offset);
+    println!("从文件系统加载目录 {:?} 中的 {} 个条目 (跳过 {})", path, count, offset);
     
-    // 转换为druid的Vector类型
-    Vector::from(result)
+    // 构建返回值
+    let result_vector = Vector::from(result);
+    
+    // 存入缓存
+    if count > 0 {
+        let mut cache = DIRECTORY_CACHE.lock().unwrap();
+        cache.insert(path_buf, result_vector.clone());
+        
+        // 如果缓存过大，清理部分缓存
+        if cache.len() > MAX_CACHE_ENTRIES {
+            clean_cache();
+        }
+    }
+    
+    // 返回结果
+    result_vector
+}
+
+/// 预加载目录内容到缓存，但不返回结果
+pub fn preload_directory(path: &Path) {
+    // 如果缓存中已有该目录，则跳过
+    {
+        let cache = DIRECTORY_CACHE.lock().unwrap();
+        if cache.contains_key(&path.to_path_buf()) {
+            return;
+        }
+    }
+    
+    // 在后台线程加载目录内容
+    let path_buf = path.to_path_buf();
+    std::thread::spawn(move || {
+        // 加载大量文件（10000足够覆盖大多数目录）
+        let contents = get_directory_contents_paged(&path_buf, 0, 10000);
+        let mut cache = DIRECTORY_CACHE.lock().unwrap();
+        cache.insert(path_buf, contents);
+    });
+}
+
+/// 清除指定目录的缓存
+pub fn invalidate_cache(path: &Path) {
+    let mut cache = DIRECTORY_CACHE.lock().unwrap();
+    cache.remove(&path.to_path_buf());
 }
 
 /// 获取目录中的文件和目录总数

@@ -13,6 +13,7 @@ druid = "0.8.3"
 im = "15.1"
 druid-widget-nursery = "0.1.0"
 dirs = "5.0"
+lazy_static = "1.4.0"
 
 [build-dependencies]
 winres = "0.1"
